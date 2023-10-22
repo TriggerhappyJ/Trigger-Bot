@@ -32,17 +32,8 @@ async def on_ready():
     print(bot.user.id)
     print('Ready to go!')
 
-@bot.command()
-async def impersonate(ctx, member: discord.Member, *, message=None):
-
-    if message == None:
-        await ctx.send(f'Who do you want to impersonate?')
-        return
-
-   
-
-@bot.event
-async def on_message(message):
+@bot.listen('on_message')
+async def replaceLink(message):
     if message.author == bot.user:
         return
 
@@ -53,7 +44,7 @@ async def on_message(message):
         modifiedLink = message.content.replace("https://twitter.com/", "https://fxtwitter.com/")
         await message.delete()
         webhook = await message.channel.create_webhook(name=message.author.display_name)
-        if (message.author.guild_avatar):
+        if message.author.guild_avatar:
             avatar = message.author.guild_avatar.url
         else:
             avatar = message.author.avatar.url
