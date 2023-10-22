@@ -4,10 +4,8 @@ from epicstore_api import EpicGamesStoreAPI
 api = EpicGamesStoreAPI()
 
 def dateConversion(start_date_iso, end_date_iso):
-    start_date = datetime.fromisoformat(start_date_iso)
-    end_date = datetime.fromisoformat(end_date_iso)
-    start_date = start_date.replace(tzinfo=timezone.utc).astimezone(tz=None)
-    end_date = end_date.replace(tzinfo=timezone.utc).astimezone(tz=None)
+    start_date = datetime.fromisoformat(start_date_iso).replace(tzinfo=timezone.utc).astimezone(tz=None)
+    end_date = datetime.fromisoformat(end_date_iso).replace(tzinfo=timezone.utc).astimezone(tz=None)
     return start_date, end_date
 
 def getFreeGames():
