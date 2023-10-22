@@ -1,7 +1,7 @@
 ﻿import discord
 import asyncio
 import yaml
-from credentials import token
+#from credentials import token
 from epicgames import currentFreeGames, upcomingFreeGames
 from datetime import datetime
 
