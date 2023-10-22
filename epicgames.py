@@ -35,7 +35,7 @@ def getGameData(game):
 
 def currentFreeGames():
     free_games_list = {}
-
+    
     for game in getFreeGames():
         gameData = getGameData(game)
         
@@ -46,7 +46,7 @@ def currentFreeGames():
             )
             dates = dateConversion(start_date_iso, end_date_iso)
             free_games_list[gameData[0]] = [gameData[0], gameData[2], gameData[3], gameData[4], dates[0], dates[1]]
-
+    
     return free_games_list
 
 def upcomingFreeGames():

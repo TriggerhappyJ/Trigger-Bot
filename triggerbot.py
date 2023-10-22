@@ -27,7 +27,7 @@ async def on_ready():
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
-    print('------')
+    print('Ready to go!')
     
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current", description="Shows the current free games on the Epic Games Store")
 async def currentGames(ctx):
