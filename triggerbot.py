@@ -3,7 +3,10 @@ from credentials import token
 from epicgames import currentFreeGames, upcomingFreeGames
 from datetime import datetime
 
-bot = discord.Bot()
+intents = discord.Intents.default()
+intents.message_content = True
+
+bot = discord.Bot(intents=intents)
 
 freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
 
@@ -28,6 +31,73 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('Ready to go!')
+
+@bot.command()
+async def impersonate(ctx, member: discord.Member, *, message=None):
+
+    if message == None:
+        await ctx.send(f'Who do you want to impersonate?')
+        return
+
+   
+
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+
+    if message.guild.id == 369336391467008002:
+        return
+
+    if message.content.startswith('https://twitter.com/'):
+        modifiedLink = message.content.replace("https://twitter.com/", "https://fxtwitter.com/")
+        await message.delete()
+        webhook = await message.channel.create_webhook(name=message.author.display_name)
+        if (message.author.guild_avatar):
+            avatar = message.author.guild_avatar.url
+        else:
+            avatar = message.author.avatar.url
+        await webhook.send(str(modifiedLink), username=message.author.display_name, avatar_url=avatar)
+        webhooks = await message.channel.webhooks()
+        for webhook in webhooks:
+            await webhook.delete()
+    elif message.content.startswith('https://x.com/'):
+        modifiedLink = message.content.replace("https://x.com/", "https://fxtwitter.com/")
+        await message.delete()
+        webhook = await message.channel.create_webhook(name=message.author.display_name)
+        if (message.author.guild_avatar):
+            avatar = message.author.guild_avatar.url
+        else:
+            avatar = message.author.avatar.url
+        await webhook.send(str(modifiedLink), username=message.author.display_name, avatar_url=avatar)
+        webhooks = await message.channel.webhooks()
+        for webhook in webhooks:
+            await webhook.delete()
+    elif message.content.startswith('https://www.reddit.com/'):
+        modifiedLink = message.content.replace("https://www.reddit.com/", "https://www.rxddit.com/")
+        await message.delete()
+        webhook = await message.channel.create_webhook(name=message.author.display_name)
+        if (message.author.guild_avatar):
+            avatar = message.author.guild_avatar.url
+        else:
+            avatar = message.author.avatar.url
+        await webhook.send(str(modifiedLink), username=message.author.display_name, avatar_url=avatar)
+        webhooks = await message.channel.webhooks()
+        for webhook in webhooks:
+            await webhook.delete()
+    elif message.content.startswith('https://old.reddit.com/'):
+        modifiedLink = message.content.replace("https://old.reddit.com/", "https://old.rxddit.com/")
+        await message.delete()
+        webhook = await message.channel.create_webhook(name=message.author.display_name)
+        if (message.author.guild_avatar):
+            avatar = message.author.guild_avatar.url
+        else:
+            avatar = message.author.avatar.url
+        await webhook.send(str(modifiedLink), username=message.author.display_name, avatar_url=avatar)
+        webhooks = await message.channel.webhooks()
+        for webhook in webhooks:
+            await webhook.delete()
+        
     
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current", description="Shows the current free games on the Epic Games Store")
 async def currentGames(ctx):
@@ -42,5 +112,6 @@ async def upcomingGames(ctx):
     for game in free_games_list:
         await ctx.send(embed=generateEmbed(free_games_list, game, "upcoming"))
     await ctx.respond("There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
+
 
 bot.run(token)
