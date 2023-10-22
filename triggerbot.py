@@ -1,6 +1,7 @@
 ﻿import discord
 import asyncio
 import yaml
+import os
 #from credentials import token
 from epicgames import currentFreeGames, upcomingFreeGames
 from datetime import datetime
@@ -13,6 +14,7 @@ linkReplacements = bot.create_group("linkreplacement", "Commands related to link
 with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
 
+token = os.environ['token']
 
 @bot.event
 async def on_ready():
