@@ -1,4 +1,5 @@
 ﻿import discord
+import asyncio
 import yaml
 from credentials import token
 from epicgames import currentFreeGames, upcomingFreeGames
@@ -6,16 +7,11 @@ from datetime import datetime
 
 intents = discord.Intents.default()
 intents.message_content = True
-
 bot = discord.Bot(intents=intents)
-
+freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
+linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
 with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
-
-print(config['replace_blacklist'])
-
-freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
-linkReplacements = bot.create_group("linkreplacements", "Commands related to link replacements")
 
 
 @bot.event
@@ -28,7 +24,8 @@ async def on_ready():
 
 @bot.listen('on_message')
 async def replaceLink(message):
-    if message.author == bot.user or message.guild.id == 369336391467008002 or message.author.id in open('names.yaml').read(config['replace_blacklist']):
+    if message.author == bot.user or message.author.id in config.get(
+            'replace_blacklist', set()):
         return
 
     replacements = {
@@ -49,27 +46,13 @@ async def replaceLink(message):
 @linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="stop",
                           description="Stops the bot from replacing links you post")
 async def stopLinkReplacements(ctx):
-    # adds the user to the list of users who don't want their links replaced
-    if ctx.author.id not in config['replace_blacklist']:
-        config['replace_blacklist'].append(ctx.author.id)
-        with open('config.yml', 'w') as config_file:
-            yaml.dump(config, config_file)
-        await ctx.respond("Got it! I won't replace your links anymore <a:duckSpin:892990312732053544>")
-    else:
-        await ctx.respond("You already have link replacements disabled <a:duckSpin:892990312732053544>")
+    await updateReplaceBlacklist(ctx, addToList=True)
 
 
 @linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="start",
                           description="Starts the bot replacing links you post")
 async def startLinkReplacements(ctx):
-    # removes the user from the list of users who don't want their links replaced
-    if ctx.author.id in config['replace_blacklist']:
-        config['replace_blacklist'].remove(ctx.author.id)
-        with open('config.yml', 'w') as config_file:
-            yaml.dump(config, config_file)
-        await ctx.respond("Got it! I'll replace your links now <a:duckSpin:892990312732053544>")
-    else:
-        await ctx.respond("You already have link replacements enabled <a:duckSpin:892990312732053544>")
+    await updateReplaceBlacklist(ctx, addToList=False)
 
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
@@ -118,11 +101,41 @@ async def generateReplacementMessage(message, modifiedMessage):
 
     async with channel.typing():
         webhook = await channel.create_webhook(name=webhook_name)
-        await webhook.send(str(modifiedMessage), username=webhook_name, avatar_url=avatar)
+        sent_message = await webhook.send(str(modifiedMessage), username=webhook_name, avatar_url=avatar, wait=True)
+        await sent_message.add_reaction("<:gunR:748006120697888780>")
 
+    def check(reaction, user):
+        return user == author and str(reaction.emoji) == "<:gunR:748006120697888780>"
+
+    try:
+        reaction, _ = await bot.wait_for("reaction_add", timeout=60, check=check)
+        if reaction.emoji == "<:gunR:748006120697888780>":
+            await sent_message.delete()
+    except asyncio.TimeoutError:
+        pass
+
+    await sent_message.clear_reaction("<:gunR:748006120697888780>")
     webhooks = await channel.webhooks()
     for webhook in webhooks:
         await webhook.delete()
+
+
+async def updateReplaceBlacklist(ctx, addToList):
+    user_id = ctx.author.id
+    if addToList and user_id not in config['replace_blacklist']:
+        config['replace_blacklist'].append(user_id)
+        message = "Got it! I won't replace replace your links anymore <a:ralseiBoom:899406996007190549>"
+    elif not addToList and user_id in config['replace_blacklist']:
+        config['replace_blacklist'].remove(user_id)
+        message = "Got it! I'll start replacing your links again <a:ralseiBlunt:899401210870763610>"
+    else:
+        message = "You already have link replacements " + (
+            "disabled" if addToList else "enabled") + " <a:duckSpin:892990312732053544>"
+
+    with open('config.yml', 'w') as config_file:
+        yaml.dump(config, config_file)
+
+    await ctx.respond(message)
 
 
 bot.run(token)
