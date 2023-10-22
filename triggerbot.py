@@ -101,22 +101,25 @@ async def generateReplacementMessage(message, modifiedMessage):
     webhook_name = author.display_name
     avatar = author.guild_avatar.url if author.guild_avatar else author.avatar.url
 
+    reaction_emoji = "☠"
+
     async with channel.typing():
         webhook = await channel.create_webhook(name=webhook_name)
         sent_message = await webhook.send(str(modifiedMessage), username=webhook_name, avatar_url=avatar, wait=True)
-        await sent_message.add_reaction("<:gunR:748006120697888780>")
+        await sent_message.add_reaction(reaction_emoji)
 
     def check(reaction, user):
-        return user == author and str(reaction.emoji) == "<:gunR:748006120697888780>"
+        return user == author and str(reaction.emoji) == reaction_emoji
 
     try:
         reaction, _ = await bot.wait_for("reaction_add", timeout=60, check=check)
-        if reaction.emoji == "<:gunR:748006120697888780>":
+        if reaction.emoji == reaction_emoji:
+            await sent_message.clear_reaction(reaction_emoji)
             await sent_message.delete()
     except asyncio.TimeoutError:
+        await sent_message.clear_reaction(reaction_emoji)
         pass
 
-    await sent_message.clear_reaction("<:gunR:748006120697888780>")
     webhooks = await channel.webhooks()
     for webhook in webhooks:
         await webhook.delete()
