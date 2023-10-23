@@ -2,6 +2,7 @@
 import asyncio
 import yaml
 import os
+import time
 from credentials import token, canary_token
 from epicgames import currentFreeGames, upcomingFreeGames
 from datetime import datetime
@@ -14,19 +15,52 @@ linkReplacements = bot.create_group("linkreplacement", "Commands related to link
 with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
 
-#token = os.environ['token']
-
-# Sets the bots status
+job_queue = asyncio.Queue()
+webhooks = {}
+MAX_WEBHOOKS = 15
 
 
 @bot.event
 async def on_ready():
+    global queue, loop
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
-    print('Ready to go!')
+    # finds all webhooks made by bot and deletes them
+    for guild in bot.guilds:
+        for channel in guild.text_channels:
+            webhooks = await channel.webhooks()
+            for webhook in webhooks:
+                # If the bot has created the webhook, delete it
+                if webhook.user == bot.user:
+                    print("Deleting webhook " + webhook.name)
+                    await webhook.delete()
+                else:
+                    print("Not my webhook!")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="vine compliations"))
+    print('Ready to go!')
 
+
+async def task_consumer():
+    while True:
+        task = await job_queue.get()
+        await task()
+        job_queue.task_done()
+
+
+async def manageWebhooks(channel_id, newWebhook):
+    global webhooks
+
+    if len(webhooks) >= MAX_WEBHOOKS:
+        # If the dictionary has reached its limit, remove the oldest entry
+        oldest_channel_id = next(iter(webhooks))
+        delete_message = await channel_id.send("Reached max number of webhooks, deleting oldest one")
+        await webhooks[oldest_channel_id].delete()
+        await delete_message.delete()
+        del webhooks[oldest_channel_id]
+
+    webhooks[channel_id] = newWebhook
+    
 
 @bot.listen('on_message')
 async def replaceLink(message):
@@ -45,7 +79,21 @@ async def replaceLink(message):
         if message.content.startswith(prefix):
             modifiedMessage = message.content.replace(prefix, replacement)
             await message.delete()
-            await generateReplacementMessage(message, modifiedMessage)
+            worker = asyncio.create_task(task_consumer())
+        
+            channel_id = message.channel.id  # Get the channel's ID
+
+            if channel_id not in webhooks:
+                # If there is no existing webhook for this channel, create a new one
+                newWebhook = await message.channel.create_webhook(name=message.channel.name)
+                await manageWebhooks(channel_id, newWebhook)  # Use the manageWebhooks function
+                webhook = newWebhook
+                print("Created webhook for channel: " + message.channel.name + " in guild: " + message.guild.name)
+            else:
+                webhook = webhooks[channel_id]  # Get the existing webhook from the dictionary
+                print("Found existing webhook for: " + message.channel.name + " in guild: " + message.guild.name)
+                
+            await job_queue.put(lambda: handleMessageReplacement(message, modifiedMessage, worker, webhook))
             break
 
 
@@ -98,35 +146,35 @@ def generateFreeGameEmbed(free_games_list, game, key):
     return embed
 
 
-async def generateReplacementMessage(message, modifiedMessage):
+async def handleMessageReplacement(message, modifiedMessage, worker, webhook):
     author = message.author
     channel = message.channel
-
-    webhook_name = author.display_name
-    avatar = author.guild_avatar.url if author.guild_avatar else author.avatar.url
-
     reaction_emoji = "☠"
+    
+    print("Replacing message from: " + author.name + " in channel: " + channel.name)
 
-    async with channel.typing():
-        webhook = await channel.create_webhook(name=webhook_name)
-        sent_message = await webhook.send(str(modifiedMessage), username=webhook_name, avatar_url=avatar, wait=True)
-        await sent_message.add_reaction(reaction_emoji)
+    sent_message, webhook = await sendReplacementMessage(modifiedMessage, author, channel, reaction_emoji, webhook)
 
     def check(reaction, user):
-        return user == author and str(reaction.emoji) == reaction_emoji
+        return user == author and str(reaction.emoji) == reaction_emoji and reaction.message.id == sent_message.id
 
     try:
-        reaction, _ = await bot.wait_for("reaction_add", timeout=60, check=check)
+        reaction, _ = await bot.wait_for("reaction_add", timeout=30, check=check)
         if reaction.emoji == reaction_emoji:
-            await sent_message.clear_reaction(reaction_emoji)
             await sent_message.delete()
     except asyncio.TimeoutError:
         await sent_message.clear_reaction(reaction_emoji)
-        pass
 
-    webhooks = await channel.webhooks()
-    for webhook in webhooks:
-        await webhook.delete()
+    worker.cancel()
+
+
+async def sendReplacementMessage(modifiedMessage, author, channel, reaction_emoji, webhook):
+    webhook_name = author.display_name
+    avatar = author.guild_avatar.url if author.guild_avatar else author.avatar.url
+    async with channel.typing():
+        sent_message = await webhook.send(str(modifiedMessage), username=webhook_name, avatar_url=avatar, wait=True)
+        await sent_message.add_reaction(reaction_emoji)
+    return sent_message, webhook
 
 
 async def updateReplaceBlacklist(ctx, addToList):
@@ -134,9 +182,11 @@ async def updateReplaceBlacklist(ctx, addToList):
     if addToList and user_id not in config['replace_blacklist']:
         config['replace_blacklist'].append(user_id)
         message = "Got it! I won't replace replace your links anymore <a:ralseiBoom:899406996007190549>"
+        print("Added " + str(user_id) + " to replace_blacklist")
     elif not addToList and user_id in config['replace_blacklist']:
         config['replace_blacklist'].remove(user_id)
         message = "Got it! I'll start replacing your links again <a:ralseiBlunt:899401210870763610>"
+        print("Removed " + str(user_id) + " from replace_blacklist")
     else:
         message = "You already have link replacements " + (
             "disabled" if addToList else "enabled") + " <a:duckSpin:892990312732053544>"
