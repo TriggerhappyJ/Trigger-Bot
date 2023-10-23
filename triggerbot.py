@@ -2,7 +2,7 @@
 import asyncio
 import yaml
 import os
-#from credentials import token
+from credentials import token, canary_token
 from epicgames import currentFreeGames, upcomingFreeGames
 from datetime import datetime
 
@@ -14,7 +14,7 @@ linkReplacements = bot.create_group("linkreplacement", "Commands related to link
 with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
 
-token = os.environ['token']
+#token = os.environ['token']
 
 # Sets the bots status
 
@@ -25,7 +25,7 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('Ready to go!')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="you"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="vine compliations"))
 
 
 @bot.listen('on_message')
@@ -147,4 +147,4 @@ async def updateReplaceBlacklist(ctx, addToList):
     await ctx.respond(message)
 
 
-bot.run(token)
+bot.run(canary_token)
