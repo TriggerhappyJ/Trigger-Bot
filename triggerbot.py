@@ -17,7 +17,7 @@ with open('config.yml', 'r') as config_file:
 
 job_queue = asyncio.Queue()
 webhooks = {}
-MAX_WEBHOOKS = 15
+MAX_WEBHOOKS = 14
 
 
 @bot.event
@@ -37,7 +37,7 @@ async def on_ready():
                     await webhook.delete()
                 else:
                     print("Not my webhook!")
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="vine compliations"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="you."))
     print('Ready to go!')
 
 
@@ -197,4 +197,4 @@ async def updateReplaceBlacklist(ctx, addToList):
     await ctx.respond(message)
 
 
-bot.run(canary_token)
+bot.run(token)
