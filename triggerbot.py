@@ -3,9 +3,8 @@ import asyncio
 import yaml
 import os
 import time
-import requests
 from credentials import token, canary_token
-from epicgames import currentFreeGames, upcomingFreeGames
+from epicgames import current_free_games, upcoming_free_games
 from datetime import datetime
 
 intents = discord.Intents.default()
@@ -17,7 +16,7 @@ with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
 
 job_queue = asyncio.Queue()
-MAX_WEBHOOKS = 14
+MAX_WEBHOOKS = 12
 
 
 @bot.event
@@ -25,37 +24,36 @@ async def on_ready():
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="startup sequence"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="start-up sequence"))
 
+    # Clear existing webhooks from the config file for each guild
     for guild in bot.guilds:
-        # Check if the bot has permission to manage webhooks in any text channel
-        if any(channel.permissions_for(guild.me).manage_webhooks for channel in guild.text_channels):
-            # Remove old webhooks and update config
-            for channel in guild.text_channels:
-                webhooks = await channel.webhooks()
-                for webhook in webhooks:
-                    if webhook.user == bot.user:
-                        print(f"Deleting webhook {webhook.name} in guild: {guild.name} id: {guild.id}")
-                        await webhook.delete()
-                        # Remove the webhook from the config
-                        config['guild_webhooks'].pop(guild.id, None)
+        clear_webhooks_for_guild(guild.id)
 
-            # Create a new webhook and set the avatar
-            webhook_avatar_url = 'https://i.imgur.com/WY4IxCU.png'
-            avatar_bytes = requests.get(webhook_avatar_url).content
-            new_webhook = await guild.text_channels[0].create_webhook(name="TriggerBotWebhook", avatar=avatar_bytes)
-
-            if new_webhook is not None:
-                config['guild_webhooks'][guild.id] = new_webhook.url
-                print(f"Created webhook in guild: {guild.name} id: {guild.id}")
-            else:
-                print(f"Failed to create webhook in guild: {guild.name} id: {guild.id}")
-
-    with open('config.yml', 'w') as config_file:
-        yaml.dump(config, config_file)
+    # Load existing webhooks from the config file
+    for guild in bot.guilds:
+        for channel in guild.text_channels:
+            webhooks = await channel.webhooks()
+            for webhook in webhooks:
+                # If the bot has created the webhook, save it in the config file
+                if webhook.user == bot.user:
+                    print("Saving webhook " + webhook.name)
+                    await manage_webhooks(channel=channel, webhook=webhook, guild_id=guild.id)
 
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="you"))
     print('Ready to go!')
+
+
+def clear_webhooks_for_guild(guild_id):
+    # Find the guild's webhooks in the config
+    guild_webhooks = next((entry for entry in config['guild_webhooks'] if entry['guild_id'] == guild_id), None)
+
+    if guild_webhooks is not None:
+        guild_webhooks['webhooks'] = []  # Clear the list of webhooks for this guild
+        print(f"Cleared existing webhooks for guild with ID {guild_id}")
+
+    with open('config.yml', 'w') as edit_config:
+        yaml.dump(config, edit_config)
 
 
 async def task_consumer():
@@ -65,10 +63,44 @@ async def task_consumer():
         job_queue.task_done()
 
 
+async def manage_webhooks(channel, webhook, guild_id):
+    # Find the guild's webhooks in the config
+    guild_webhooks = next((entry for entry in config['guild_webhooks'] if entry['guild_id'] == guild_id), None)
+
+    if guild_webhooks is None:
+        guild_webhooks = {'guild_id': guild_id, 'webhooks': []}
+        config['guild_webhooks'].append(guild_webhooks)
+
+    if len(guild_webhooks['webhooks']) >= MAX_WEBHOOKS:
+        # If the guild has reached its limit, remove the oldest entry
+        delete_message = await channel.send("Reached max number of webhooks, deleting the oldest one <a:duckSpin:892990312732053544>")
+        webhook_to_delete = guild_webhooks['webhooks'][0]
+
+        oldest_webhook_channel = channel.guild.get_channel(webhook_to_delete['channel_id'])
+
+        for webhook in await oldest_webhook_channel.webhooks():
+            if webhook.id == webhook_to_delete['webhook_id']:
+                print("Deleting webhook " + webhook.name + " from channel " + oldest_webhook_channel.name + " in guild " + oldest_webhook_channel.guild.name)
+                await webhook.delete()
+                await delete_message.delete()
+                guild_webhooks['webhooks'].pop(0)
+                break
+
+    entry = {
+        'channel_id': channel.id,
+        'webhook_id': webhook.id,
+        'webhook_url': webhook.url,
+    }
+
+    guild_webhooks['webhooks'].append(entry)
+
+    with open('config.yml', 'w') as edit_config:
+        yaml.dump(config, edit_config)
+
+
 @bot.listen('on_message')
 async def replace_link(message):
-    if message.author == bot.user or message.author.id in config.get(
-            'replace_blacklist', set()):
+    if message.author == bot.user or message.author.id in config.get('replace_blacklist', set()):
         return
 
     replacements = {
@@ -81,23 +113,31 @@ async def replace_link(message):
     for prefix, replacement in replacements.items():
         if message.content.startswith(prefix):
             modified_message = message.content.replace(prefix, replacement)
-            await message.delete()
+
+            webhook = await create_webhook_if_not_exists(message.channel)
             worker = asyncio.create_task(task_consumer())
-
-            channel_id = message.channel.id  # Get the channel's ID
-
-            if channel_id not in webhooks:
-                # If there is no existing webhook for this channel, create a new one
-                new_webhook = await message.channel.create_webhook(name=message.channel.name)
-                await manage_webhooks(channel_id, new_webhook, message.channel)  # Use the manageWebhooks function
-                webhook = new_webhook
-                print("Created webhook for channel: " + message.channel.name + " in guild: " + message.guild.name)
-            else:
-                webhook = webhooks[channel_id]  # Get the existing webhook from the dictionary
-                print("Found existing webhook for: " + message.channel.name + " in guild: " + message.guild.name)
-
             await job_queue.put(lambda: handle_message_replacement(message, modified_message, worker, webhook))
             break
+
+
+async def create_webhook_if_not_exists(channel):
+    webhooks = await channel.webhooks()
+    existing_webhook = None
+    for webhook in webhooks:
+        if webhook.user == bot.user:
+            existing_webhook = webhook
+            break
+
+    if existing_webhook is None:
+        new_webhook = await channel.create_webhook(name=channel.name)
+        await manage_webhooks(channel, new_webhook, channel.guild.id)
+        webhook = new_webhook
+        print("Created webhook for channel: " + channel.name + " in guild: " + channel.guild.name)
+    else:
+        webhook = existing_webhook
+        print("Found an existing webhook for: " + channel.name + " in guild: " + channel.guild.name)
+
+    return webhook
 
 
 @linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="stop",
@@ -115,7 +155,7 @@ async def start_link_replacements(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
                    description="Shows the current free games on the Epic Games Store")
 async def current_games(ctx):
-    free_games_list = currentFreeGames()
+    free_games_list = current_free_games()
     for game in free_games_list:
         await ctx.send(embed=generate_free_game_embed(free_games_list, game, "current"))
     await ctx.respond(
@@ -125,7 +165,7 @@ async def current_games(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="upcoming",
                    description="Shows the upcoming free games on the Epic Games Store")
 async def upcoming_games(ctx):
-    free_games_list = upcomingFreeGames()
+    free_games_list = upcoming_free_games()
     for game in free_games_list:
         await ctx.send(embed=generate_free_game_embed(free_games_list, game, "upcoming"))
     await ctx.respond(
@@ -155,11 +195,11 @@ async def handle_message_replacement(message, modified_message, worker, webhook)
     reaction_emoji = "☠"
 
     print("Replacing message from: " + author.name + " in channel: " + channel.name)
-
+    await message.delete()
     sent_message, webhook = await send_replacement_message(modified_message, author, channel, reaction_emoji, webhook)
 
-    def check(reaction, user):
-        return user == author and str(reaction.emoji) == reaction_emoji and reaction.message.id == sent_message.id
+    def check(message_reaction, user):
+        return user == author and str(message_reaction.emoji) == reaction_emoji and message_reaction.message.id == sent_message.id
 
     try:
         reaction, _ = await bot.wait_for("reaction_add", timeout=30, check=check)
@@ -194,8 +234,8 @@ async def update_replace_blacklist(ctx, add_to_list):
         message = "You already have link replacements " + (
             "disabled" if add_to_list else "enabled") + " <a:duckSpin:892990312732053544>"
 
-    with open('config.yml', 'w') as config_file:
-        yaml.dump(config, config_file)
+    with open('config.yml', 'w') as edit_config:
+        yaml.dump(config, edit_config)
 
     await ctx.respond(message)
 

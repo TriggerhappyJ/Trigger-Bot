@@ -1,5 +1,8 @@
 guild_webhooks:
-  741435438807646268: https://discord.com/api/webhooks/1166242374108852248/KI6JNcx5MChoPp1wQnGYoraPynvYDG4YuW7VRa-NsdG4qSraEB5ycA3QVUl78DamReHY
-  1166228817958932532: https://discord.com/api/webhooks/1166242384745607229/aZW70UUjdOXD-GqrtaRBYf8P86qTElMBUP2gcrgCAInVFJl3ohXxlcpkRP-huznhuwZj
-  1166228995415740438: https://discord.com/api/webhooks/1166242395445272626/vTvAOg9aooQTP3dSxyVK-6HEkHqiUzsAnS7rvYZL8m98tEH1BfyQ69P9egELMpmvbvFA
+- guild_id: 741435438807646268
+  webhooks: []
+- guild_id: 1166228817958932532
+  webhooks: []
+- guild_id: 1166228995415740438
+  webhooks: []
 replace_blacklist: []
