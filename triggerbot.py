@@ -10,7 +10,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Bot(intents=intents)
 
-reeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
+freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
 linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
 settings = bot.create_group("settings", "Commands related to bot settings")
 
