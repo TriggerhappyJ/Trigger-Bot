@@ -11,6 +11,7 @@ intents.message_content = True
 bot = discord.Bot(intents=intents)
 freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
 linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
+settings = bot.create_group("settings", "Commands related to bot settings")
 with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
     startup_status_message = config['startup_status_message']
@@ -19,6 +20,7 @@ with open('config.yml', 'r') as config_file:
     running_status_type = config['running_status_type']
 
 job_queue = asyncio.Queue()
+
 
 @bot.event
 async def on_ready():
@@ -36,7 +38,8 @@ async def on_ready():
         guild = bot.get_guild(guild_webhooks['guild_id'])
         if guild is None:
             config['guild_webhooks'].remove(guild_webhooks)
-            print("Removed guild " + str(guild_webhooks['guild_id']) + " from config file, guild no longer exists or bot is no longer in it")
+            print("Removed guild " + str(
+                guild_webhooks['guild_id']) + " from config file, guild no longer exists or bot is no longer in it")
 
     # Load existing webhooks from the config file
     for guild in bot.guilds:
@@ -104,6 +107,32 @@ async def upcoming_games(ctx):
         await ctx.send(embed=generate_free_game_embed(free_games_list, game, "upcoming"))
     await ctx.respond(
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
+
+
+@settings.command(guild_ids=[741435438807646268, 369336391467008002], name="setstatus",
+                  description="Sets the bots status", )
+async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streaming: 1, listening: 2, watching: 3"),
+                     status_message: discord.Option(str, "The status message")):
+    allowed_user_id = 233484220138258432
+    status_type_map = {
+        0: "playing",
+        1: "streaming",
+        2: "listening to",
+        3: "watching"
+    }
+
+    if ctx.author.id == allowed_user_id:
+        with open('config.yml', 'w') as edit_config:
+            config['running_status_type'] = status_type
+            config['running_status_message'] = status_message
+            yaml.dump(config, edit_config)
+        await bot.change_presence(activity=discord.Activity(type=status_type, name=status_message))
+
+        if status_type in status_type_map:
+            status_type_str = status_type_map[status_type]
+            await ctx.respond(f"Status set to {status_type_str} {status_message} <a:ralseiBlunt:899401210870763610>")
+        else:
+            await ctx.respond("You don't have permission to use this command. <a:ralseiBoom:899406996007190549>")
 
 
 async def task_consumer():
