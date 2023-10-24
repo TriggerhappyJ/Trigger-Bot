@@ -2,6 +2,10 @@
 import discord
 import asyncio
 
+with open('config.yml', 'r') as config_file:
+    config = yaml.safe_load(config_file)
+    replacement_timeout = config['replacement_timeout']
+
 
 async def handle_message_replacement(message, modified_message, worker, webhook, bot):
     author = message.author
@@ -16,7 +20,7 @@ async def handle_message_replacement(message, modified_message, worker, webhook,
         return user == author and str(message_reaction.emoji) == reaction_emoji and message_reaction.message.id == sent_message.id
 
     try:
-        reaction, _ = await bot.wait_for("reaction_add", timeout=30, check=check)
+        reaction, _ = await bot.wait_for("reaction_add", timeout=replacement_timeout, check=check)
         if reaction.emoji == reaction_emoji:
             await sent_message.delete()
     except asyncio.TimeoutError:

@@ -10,3 +10,4 @@ running_status_message: you
 running_status_type: 3
 startup_status_message: startup sequence
 startup_status_type: 0
+replacement_timeout: 30
