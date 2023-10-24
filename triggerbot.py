@@ -9,9 +9,11 @@ from webhooks import create_webhook_if_not_exists, manage_webhooks, clear_webhoo
 intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Bot(intents=intents)
-freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
+
+reeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
 linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
 settings = bot.create_group("settings", "Commands related to bot settings")
+
 with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
     startup_status_message = config['startup_status_message']
