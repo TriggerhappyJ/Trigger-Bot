@@ -144,4 +144,4 @@ async def task_consumer():
         job_queue.task_done()
 
 
-bot.run(canary_token)
+bot.run(token)
