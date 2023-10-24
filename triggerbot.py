@@ -13,6 +13,10 @@ freeGames = bot.create_group("freegames", "Commands related to the Epic Games St
 linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
 with open('config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
+    startup_status_message = config['startup_status_message']
+    startup_status_type = config['startup_status_type']
+    running_status_message = config['running_status_message']
+    running_status_type = config['running_status_type']
 
 job_queue = asyncio.Queue()
 
@@ -21,12 +25,12 @@ async def on_ready():
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="start-up sequence"))
+    await bot.change_presence(activity=discord.Activity(type=startup_status_type, name=startup_status_message))
 
     # Clear existing webhooks from the config file for each guild
     for guild in bot.guilds:
         clear_webhooks_for_guild(guild.id, config)
-        
+
     # Check if there are any guilds in the config file that the bot is no longer in
     for guild_webhooks in config['guild_webhooks']:
         guild = bot.get_guild(guild_webhooks['guild_id'])
@@ -44,7 +48,7 @@ async def on_ready():
                     print("Saving webhook " + webhook.name)
                     await manage_webhooks(channel=channel, webhook=webhook, guild_id=guild.id, config=config)
 
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="you"))
+    await bot.change_presence(activity=discord.Activity(type=running_status_type, name=running_status_message))
     print('Ready to go!')
 
 
