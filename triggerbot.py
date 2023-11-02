@@ -67,6 +67,7 @@ async def replace_link(message):
         'https://x.com/': 'https://fxtwitter.com/',
         'https://www.reddit.com/': 'https://www.rxddit.com/',
         'https://old.reddit.com/': 'https://old.rxddit.com/',
+        'https://www.youtube.com/shorts/': 'https://www.youtube.com/watch?v=',
     }
 
     for prefix, replacement in replacements.items():
