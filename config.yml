@@ -1,13 +1,13 @@
-guild_webhooks:
-- guild_id: 741435438807646268
-  webhooks:
-  - channel_id: 1165824736987726015
-    webhook_id: 1166289514478706791
-    webhook_url: https://discord.com/api/webhooks/1166289514478706791/P7h0S2yCMcPRavgNae4i65bphM1ErEmBDJoU6jG1kqdXSBC6YooF-0D2mgiVoHeCxzvK
+guilds:
+- current_games_channels: []
+  guild_id: 741435438807646268
+  guild_name: Jacob's Server of Burgers
+  upcoming_games_channels: []
+  webhooks: []
 max_webhooks: 12
 replace_blacklist: []
+replacement_timeout: 30
 running_status_message: you
 running_status_type: 3
 startup_status_message: startup sequence
 startup_status_type: 0
-replacement_timeout: 30
