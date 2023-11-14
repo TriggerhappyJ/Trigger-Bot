@@ -9,18 +9,29 @@ with open('config.yml', 'r') as config_file:
     max_webhooks = config['max_webhooks']
 
 
+async def handle_webhook_startup(bot):
+    for guild in bot.guilds:
+        for channel in guild.text_channels:
+            webhooks = await channel.webhooks()
+            for webhook in webhooks:
+                # If the bot has created the webhook, save it in the config file
+                if webhook.user == bot.user:
+                    print("Saving webhook " + webhook.name + " in guild " + webhook.guild.name)
+                    await manage_webhooks(channel=channel, webhook=webhook, guild_id=guild.id, config=config)
+
+
 async def manage_webhooks(channel, webhook, guild_id, config):
     # Find the guild's webhooks in the config
-    guild_webhooks = next((entry for entry in config['guild_webhooks'] if entry['guild_id'] == guild_id), None)
+    guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == guild_id), None)
 
-    if guild_webhooks is None:
-        guild_webhooks = {'guild_id': guild_id, 'webhooks': []}
-        config['guild_webhooks'].append(guild_webhooks)
+    if guilds is None:
+        guilds = {'guild_id': guild_id, 'webhooks': []}
+        config['guilds'].append(guilds)
 
-    if len(guild_webhooks['webhooks']) >= max_webhooks:
+    if len(guilds['webhooks']) >= max_webhooks:
         # If the guild has reached its limit, remove the oldest entry
         delete_message = await channel.send("Reached max number of webhooks, deleting the oldest one <a:duckSpin:892990312732053544>")
-        webhook_to_delete = guild_webhooks['webhooks'][0]
+        webhook_to_delete = guilds['webhooks'][0]
 
         oldest_webhook_channel = channel.guild.get_channel(webhook_to_delete['channel_id'])
 
@@ -29,7 +40,7 @@ async def manage_webhooks(channel, webhook, guild_id, config):
                 print("Deleting webhook " + webhook.name + " from channel " + oldest_webhook_channel.name + " in guild " + oldest_webhook_channel.guild.name)
                 await webhook.delete()
                 await delete_message.delete()
-                guild_webhooks['webhooks'].pop(0)
+                guilds['webhooks'].pop(0)
                 break
 
     entry = {
@@ -38,7 +49,7 @@ async def manage_webhooks(channel, webhook, guild_id, config):
         'webhook_url': webhook.url,
     }
 
-    guild_webhooks['webhooks'].append(entry)
+    guilds['webhooks'].append(entry)
 
     with open('config.yml', 'w') as edit_config:
         yaml.dump(config, edit_config)
@@ -66,10 +77,10 @@ async def create_webhook_if_not_exists(channel, config, bot):
 
 def clear_webhooks_for_guild(guild_id, config):
     # Find the guild's webhooks in the config
-    guild_webhooks = next((entry for entry in config['guild_webhooks'] if entry['guild_id'] == guild_id), None)
+    guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == guild_id), None)
 
-    if guild_webhooks is not None:
-        guild_webhooks['webhooks'] = []  # Clear the list of webhooks for this guild
+    if guilds is not None:
+        guilds['webhooks'] = {}  # Clear the list of webhooks for this guild
         print(f"Cleared existing webhooks for guild with ID {guild_id}")
 
     with open('config.yml', 'w') as edit_config:

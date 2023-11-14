@@ -4,9 +4,9 @@ import yaml
 import discord
 import asyncio
 
-
 api = EpicGamesStoreAPI()
-
+with open('epicgames.yml', 'r') as epic_file:
+    epic_config = yaml.safe_load(epic_file)
 
 def date_conversion(start_date_iso, end_date_iso):
     start_date = datetime.fromisoformat(start_date_iso).replace(tzinfo=timezone.utc).astimezone(tz=None)
@@ -75,14 +75,14 @@ def upcoming_free_games():
     return free_games_list
 
 
-def generate_free_game_embed(free_games_list, game, key):
+def generate_free_game_embed(free_games_list, game, key, update_time):
     embed = discord.Embed(color=0x353336)
     embed.type = "rich"
     embed.title = free_games_list[game][0]
     embed.url = free_games_list[game][1]
     embed.description = free_games_list[game][3]
     embed.set_image(url=free_games_list[game][2])
-    embed.set_footer(text="Last Updated: " + str(datetime.now())[:-7] + " || Developed by Jacob 😎")
+    embed.set_footer(text="Last Updated: " + update_time + " || Developed by Jacob 😎")
     embed.set_thumbnail(
         url="https://cdn2.unrealengine.com/Unreal+Engine%2Feg-logo-filled-1255x1272-0eb9d144a0f981d1cbaaa1eb957de7a3207b31bb.png")
     if key == "current":
@@ -90,3 +90,29 @@ def generate_free_game_embed(free_games_list, game, key):
     else:
         embed.add_field(name="Available By", value=str(discord.utils.format_dt(free_games_list[game][4])), inline=True)
     return embed
+
+
+async def check_epic_free_games(worker):
+    while True:
+        current_games_list = current_free_games()
+        upcoming_games_list = upcoming_free_games()
+
+        print("Checking for free games...  Current time: " + str(datetime.now())[:-7])
+        epic_config['update_time'] = str(datetime.now())[:-7]
+        
+        if current_games_list != epic_config['current_free_games']:
+            print("Current free game is different! Updating...")
+            epic_config['current_free_games'] = current_games_list
+        else:
+            print("Current free games are the same!")
+
+        if upcoming_games_list != epic_config['upcoming_free_games']:
+            print("Upcoming free game is different! Updating...")
+            epic_config['upcoming_free_games'] = upcoming_games_list
+        else: 
+            print("Upcoming free games are the same!")
+
+        with open('epicgames.yml', 'w') as edit_epicgames:
+            yaml.dump(epic_config, edit_epicgames)
+
+        await asyncio.sleep(60)

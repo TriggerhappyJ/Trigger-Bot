@@ -2,9 +2,9 @@
 import asyncio
 import yaml
 from credentials import token, canary_token
-from epicgames import current_free_games, upcoming_free_games, generate_free_game_embed
+from epicgames import current_free_games, upcoming_free_games, generate_free_game_embed, check_epic_free_games
 from messagereplacement import handle_message_replacement, update_replace_blacklist
-from webhooks import create_webhook_if_not_exists, manage_webhooks, clear_webhooks_for_guild
+from webhooks import create_webhook_if_not_exists, manage_webhooks, clear_webhooks_for_guild, handle_webhook_startup
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -36,23 +36,19 @@ async def on_ready():
         clear_webhooks_for_guild(guild.id, config)
 
     # Check if there are any guilds in the config file that the bot is no longer in
-    for guild_webhooks in config['guild_webhooks']:
-        guild = bot.get_guild(guild_webhooks['guild_id'])
+    for guilds in config['guilds']:
+        guild = bot.get_guild(guilds['guild_id'])
         if guild is None:
-            config['guild_webhooks'].remove(guild_webhooks)
+            config['guilds'].remove(guilds)
             print("Removed guild " + str(
-                guild_webhooks['guild_id']) + " from config file, guild no longer exists or bot is no longer in it")
+                guilds['guild_id']) + " from config file, guild no longer exists or bot is no longer in it")
 
     # Load existing webhooks from the config file
-    for guild in bot.guilds:
-        for channel in guild.text_channels:
-            webhooks = await channel.webhooks()
-            for webhook in webhooks:
-                # If the bot has created the webhook, save it in the config file
-                if webhook.user == bot.user:
-                    print("Saving webhook " + webhook.name)
-                    await manage_webhooks(channel=channel, webhook=webhook, guild_id=guild.id, config=config)
+    await handle_webhook_startup(bot)
 
+    # Starts looking for changes to the epic games list
+    worker = asyncio.create_task(task_consumer())
+    await job_queue.put(lambda: check_epic_free_games(worker))
     await bot.change_presence(activity=discord.Activity(type=running_status_type, name=running_status_message))
     print('Ready to go!')
 
@@ -95,9 +91,11 @@ async def start_link_replacements(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
                    description="Shows the current free games on the Epic Games Store")
 async def current_games(ctx):
-    free_games_list = current_free_games()
+    with open('epicgames.yml', 'r') as epic_file:
+        epic_free_games = yaml.safe_load(epic_file)
+    free_games_list = epic_free_games['current_free_games']
     for game in free_games_list:
-        await ctx.send(embed=generate_free_game_embed(free_games_list, game, "current"))
+        await ctx.send(embed=generate_free_game_embed(free_games_list, game, "current", epic_free_games['update_time']))
     await ctx.respond(
         "There are a total of " + str(len(free_games_list)) + " free games right now <a:duckSpin:892990312732053544>")
 
@@ -105,9 +103,11 @@ async def current_games(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="upcoming",
                    description="Shows the upcoming free games on the Epic Games Store")
 async def upcoming_games(ctx):
-    free_games_list = upcoming_free_games()
+    with open('epicgames.yml', 'r') as epic_file:
+        epic_free_games = yaml.safe_load(epic_file)
+    free_games_list = epic_free_games['upcoming_free_games']
     for game in free_games_list:
-        await ctx.send(embed=generate_free_game_embed(free_games_list, game, "upcoming"))
+        await ctx.send(embed=generate_free_game_embed(free_games_list, game, "upcoming", epic_free_games['update_time']))
     await ctx.respond(
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
 
@@ -145,4 +145,4 @@ async def task_consumer():
         job_queue.task_done()
 
 
-bot.run(token)
+bot.run(canary_token)
