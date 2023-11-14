@@ -8,13 +8,13 @@ with open('config.yml', 'r') as config_file:
     max_webhooks = webhook_config['max_webhooks']
 
 
-async def manage_webhooks(channel, webhook, guild_id, config):
+async def manage_webhooks(channel, webhook, guild_id, config, guild_name):
     # Find the guild's webhooks in the config
     guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == guild_id), None)
 
-    if guilds is None:
-        guilds = {'guild_id': guild_id, 'webhooks': []}
-        config['guilds'].append(guilds)
+    #if guilds is None:
+    #    guilds = {'guild_id': guild_id, 'guild_name': guild_name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': []}
+     #   config['guilds'].append(guilds)
 
     if len(guilds['webhooks']) >= max_webhooks:
         # If the guild has reached its limit, remove the oldest entry
@@ -55,7 +55,7 @@ async def create_webhook_if_not_exists(channel, config, bot):
 
     if existing_webhook is None:
         new_webhook = await channel.create_webhook(name=channel.name)
-        await manage_webhooks(channel, new_webhook, channel.guild.id, config)
+        await manage_webhooks(channel, new_webhook, channel.guild.id, config, channel.guild.name)
         webhook = new_webhook
         print("Created webhook for channel: " + channel.name + " in guild: " + channel.guild.name)
     else:
@@ -79,10 +79,18 @@ def clear_webhooks_for_guild(guild_id, config):
 
 async def handle_webhook_startup(bot, config):
     for guild in bot.guilds:
+        # Find if the guild is in config, if not then add an entry for it
+        guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == guild.id), None)
+        if guilds is None:
+            guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': []}
+            config['guilds'].append(guilds)
+            with open('config.yml', 'w') as edit_config:
+                yaml.dump(config, edit_config)
+
         for channel in guild.text_channels:
             webhooks = await channel.webhooks()
             for webhook in webhooks:
                 # If the bot has created the webhook, save it in the config file
                 if webhook.user == bot.user:
                     print("Saving webhook " + webhook.name + " in guild " + webhook.guild.name)
-                    await manage_webhooks(channel, webhook, guild.id, config)
+                    await manage_webhooks(channel, webhook, guild.id, config, webhook.guild.name)

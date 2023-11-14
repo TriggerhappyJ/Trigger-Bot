@@ -110,6 +110,44 @@ async def upcoming_games(ctx):
         await ctx.send(embed=generate_free_game_embed(free_games_list, game, "upcoming", epic_free_games['update_time']))
     await ctx.respond(
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
+    
+
+@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
+                   description="Use to toggle posting of current free games in current channel")
+async def toggle_current_games_channel(ctx):
+    with open('config.yml', 'w') as edit_config:
+        # Finds the guild in the config file
+        guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
+
+        # Adds the current channel to the guilds current games channel list if it isn't already in it
+        if ctx.channel.id not in guilds['current_games_channels']:
+            guilds['current_games_channels'].append(ctx.channel.id)
+            yaml.dump(config, edit_config)
+            await ctx.respond("I'll send current free games messages here now <a:ralseiBlunt:899401210870763610>")
+        else:
+            # Removes the current channel from the guilds current games channel list if it is already in it
+            guilds['current_games_channels'].remove(ctx.channel.id)
+            yaml.dump(config, edit_config)
+            await ctx.respond("I won't send current free games messages here anymore <a:ralseiBoom:899406996007190549>")
+
+
+@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
+                   description="Use to toggle posting of upcoming free games in current channel")
+async def toggle_upcoming_games_channel(ctx):
+    with open('config.yml', 'w') as edit_config:
+        # Finds the guild in the config file
+        guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
+
+        # Adds the current channel to the guilds current games channel list if it isn't already in it
+        if ctx.channel.id not in guilds['upcoming_games_channels']:
+            guilds['upcoming_games_channels'].append(ctx.channel.id)
+            yaml.dump(config, edit_config)
+            await ctx.respond("I'll send upcoming free games messages here now <a:ralseiBlunt:899401210870763610>")
+        else:
+            # Removes the current channel from the guilds current games channel list if it is already in it
+            guilds['upcoming_games_channels'].remove(ctx.channel.id)
+            yaml.dump(config, edit_config)
+            await ctx.respond("I won't send upcoming free games messages here anymore <a:ralseiBoom:899406996007190549>")
 
 
 @settings.command(guild_ids=[741435438807646268, 369336391467008002], name="setstatus",
@@ -137,6 +175,26 @@ async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streamin
         else:
             await ctx.respond("You don't have permission to use this command. <a:ralseiBoom:899406996007190549>")
 
+
+# When the bot is added to a server, add it to config
+@bot.event
+async def on_guild_join(guild):
+    print("Joined guild: " + guild.name)
+    guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': []}
+    config['guilds'].append(guilds)
+    with open('config.yml', 'w') as edit_config:
+        yaml.dump(config, edit_config)
+
+
+# When the bot is removed from a server, remove it from config
+@bot.event
+async def on_guild_remove(guild):
+    print("Left guild: " + guild.name)
+    for guilds in config['guilds']:
+        if guilds['guild_id'] == guild.id:
+            config['guilds'].remove(guilds)
+            with open('config.yml', 'w') as edit_config:
+                yaml.dump(config, edit_config)
 
 async def task_consumer():
     while True:
