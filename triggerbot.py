@@ -44,7 +44,7 @@ async def on_ready():
                 guilds['guild_id']) + " from config file, guild no longer exists or bot is no longer in it")
 
     # Load existing webhooks from the config file
-    await handle_webhook_startup(bot)
+    await handle_webhook_startup(bot, config)
 
     # Starts looking for changes to the epic games list
     worker = asyncio.create_task(task_consumer())

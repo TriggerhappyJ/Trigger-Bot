@@ -4,21 +4,6 @@ guilds:
   - channel_id: 1165824736987726015
     webhook_id: 1166289514478706791
     webhook_url: https://discord.com/api/webhooks/1166289514478706791/P7h0S2yCMcPRavgNae4i65bphM1ErEmBDJoU6jG1kqdXSBC6YooF-0D2mgiVoHeCxzvK
-  - channel_id: 1165824736987726015
-    webhook_id: 1166289514478706791
-    webhook_url: https://discord.com/api/webhooks/1166289514478706791/P7h0S2yCMcPRavgNae4i65bphM1ErEmBDJoU6jG1kqdXSBC6YooF-0D2mgiVoHeCxzvK
-  - channel_id: 1165824736987726015
-    webhook_id: 1166289514478706791
-    webhook_url: https://discord.com/api/webhooks/1166289514478706791/P7h0S2yCMcPRavgNae4i65bphM1ErEmBDJoU6jG1kqdXSBC6YooF-0D2mgiVoHeCxzvK
-  - channel_id: 1165824736987726015
-    webhook_id: 1166289514478706791
-    webhook_url: https://discord.com/api/webhooks/1166289514478706791/P7h0S2yCMcPRavgNae4i65bphM1ErEmBDJoU6jG1kqdXSBC6YooF-0D2mgiVoHeCxzvK
-  - channel_id: 1165824736987726015
-    webhook_id: 1166289514478706791
-    webhook_url: https://discord.com/api/webhooks/1166289514478706791/P7h0S2yCMcPRavgNae4i65bphM1ErEmBDJoU6jG1kqdXSBC6YooF-0D2mgiVoHeCxzvK
-  - channel_id: 1165824736987726015
-    webhook_id: 1166289514478706791
-    webhook_url: https://discord.com/api/webhooks/1166289514478706791/P7h0S2yCMcPRavgNae4i65bphM1ErEmBDJoU6jG1kqdXSBC6YooF-0D2mgiVoHeCxzvK
 max_webhooks: 12
 replace_blacklist: []
 replacement_timeout: 30
