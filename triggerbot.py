@@ -8,6 +8,9 @@ from webhooks import create_webhook_if_not_exists, manage_webhooks, clear_webhoo
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.reactions = True
+intents.members = True
+intents.guilds = True
 bot = discord.Bot(intents=intents)
 
 freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
@@ -48,7 +51,7 @@ async def on_ready():
 
     # Starts looking for changes to the epic games list
     worker = asyncio.create_task(task_consumer())
-    await job_queue.put(lambda: check_epic_free_games(worker))
+    await job_queue.put(lambda: check_epic_free_games(worker, bot))
     await bot.change_presence(activity=discord.Activity(type=running_status_type, name=running_status_message))
     print('Ready to go!')
 

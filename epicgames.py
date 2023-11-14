@@ -5,8 +5,6 @@ import discord
 import asyncio
 
 api = EpicGamesStoreAPI()
-with open('epicgames.yml', 'r') as epic_file:
-    epic_config = yaml.safe_load(epic_file)
 
 def date_conversion(start_date_iso, end_date_iso):
     start_date = datetime.fromisoformat(start_date_iso).replace(tzinfo=timezone.utc).astimezone(tz=None)
@@ -92,27 +90,46 @@ def generate_free_game_embed(free_games_list, game, key, update_time):
     return embed
 
 
-async def check_epic_free_games(worker):
+async def check_epic_free_games(worker, bot):
     while True:
         current_games_list = current_free_games()
         upcoming_games_list = upcoming_free_games()
 
+        with open('epicgames.yml', 'r') as epic_file:
+            epic_config = yaml.safe_load(epic_file)
+
+        with open('config.yml', 'r') as config_file:
+            config = yaml.safe_load(config_file)
+
         print("Checking for free games...  Current time: " + str(datetime.now())[:-7])
         epic_config['update_time'] = str(datetime.now())[:-7]
-        
+
         if current_games_list != epic_config['current_free_games']:
             print("Current free game is different! Updating...")
             epic_config['current_free_games'] = current_games_list
+            print("Checking guilds")
+            # for every guild in the config post in the current games channels
+            for guild in config['guilds']:
+                for channel in guild['current_games_channels']:
+                    current_games_channel = bot.get_channel(channel)
+                    for game in epic_config['current_free_games']:
+                        await current_games_channel.send(embed=generate_free_game_embed(current_games_list, game, "current", str(datetime.now())[:-7]))
         else:
             print("Current free games are the same!")
 
         if upcoming_games_list != epic_config['upcoming_free_games']:
             print("Upcoming free game is different! Updating...")
             epic_config['upcoming_free_games'] = upcoming_games_list
+            # for every guild in the config post in the current games channels
+            for guild in config['guilds']:
+                for channel in guild['upcoming_games_channels']:
+                    upcoming_games_channel = bot.get_channel(channel)
+                    for game in epic_config['upcoming_free_games']:
+                        await upcoming_games_channel.send(embed=generate_free_game_embed(upcoming_games_list, game, "current", str(datetime.now())[:-7]))
         else: 
             print("Upcoming free games are the same!")
 
         with open('epicgames.yml', 'w') as edit_epicgames:
             yaml.dump(epic_config, edit_epicgames)
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(30)

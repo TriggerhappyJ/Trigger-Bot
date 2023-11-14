@@ -1,5 +1,6 @@
 guilds:
-- current_games_channels: []
+- current_games_channels:
+  - 1165824736987726015
   guild_id: 741435438807646268
   guild_name: Jacob's Server of Burgers
   upcoming_games_channels: []
