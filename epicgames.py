@@ -132,4 +132,4 @@ async def check_epic_free_games(worker, bot):
         with open('epicgames.yml', 'w') as edit_epicgames:
             yaml.dump(epic_config, edit_epicgames)
 
-        await asyncio.sleep(30)
+        await asyncio.sleep(14400)
