@@ -1,10 +1,8 @@
 guilds:
-- current_games_channels:
-  - 1165824736987726015
+- current_games_channels: []
   guild_id: 741435438807646268
   guild_name: Jacob's Server of Burgers
-  upcoming_games_channels:
-  - 1165824736987726015
+  upcoming_games_channels: []
   webhooks: []
 max_webhooks: 12
 replace_blacklist: []
