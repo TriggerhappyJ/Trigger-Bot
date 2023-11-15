@@ -3,7 +3,7 @@ import asyncio
 import yaml
 from credentials import token, canary_token
 from epicgames import current_free_games, upcoming_free_games, generate_free_game_embed, check_epic_free_games
-from messagereplacement import handle_message_replacement, update_replace_blacklist
+from messagereplacement import handle_message_replacement, replace_blacklist_settings
 from webhooks import create_webhook_if_not_exists, manage_webhooks, clear_webhooks_for_guild, handle_webhook_startup
 
 intents = discord.Intents.default()
@@ -79,16 +79,11 @@ async def replace_link(message):
             break
 
 
-@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="stop",
-                          description="Stops the bot from replacing links you post")
-async def stop_link_replacements(ctx):
-    await update_replace_blacklist(ctx, add_to_list=True, config=config)
-
-
-@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="start",
-                          description="Starts the bot replacing links you post")
-async def start_link_replacements(ctx):
-    await update_replace_blacklist(ctx, add_to_list=False, config=config)
+@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="settings",
+                          description="Allows you to choose what message types get replaced")
+async def edit_link_replacements(ctx):
+    worker = asyncio.create_task(task_consumer())
+    await job_queue.put(lambda: replace_blacklist_settings(ctx, worker))
 
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",

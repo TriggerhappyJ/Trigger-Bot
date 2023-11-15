@@ -19,24 +19,37 @@ class replace_settings_view(discord.ui.View):
     async def twitter_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
+            config['replace_blacklist'][interaction.user.id].append('twitter')
+            print("Adding twitter to config")
         else:
             button.style = discord.ButtonStyle.green
+            config['replace_blacklist'][interaction.user.id].remove('twitter')
+        with open('config.yml', 'w') as config_file:
+            yaml.dump(config, config_file)
         await interaction.response.edit_message(view=self)
-
+    
     @discord.ui.button(label="Reddit", style=discord.ButtonStyle.green)
     async def reddit_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
+            config['replace_blacklist'][interaction.user.id].append('reddit')
         else:
-            button.style = discord.ButtonStyle.green        
+            button.style = discord.ButtonStyle.green
+            config['replace_blacklist'][interaction.user.id].remove('reddit')
+        with open('config.yml', 'w') as config_file:
+            yaml.dump(config, config_file)
         await interaction.response.edit_message(view=self)
 
     @discord.ui.button(label="YT Shorts", style=discord.ButtonStyle.green)
     async def shorts_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
+            config['replace_blacklist'][interaction.user.id].append('shorts')
         else:
-            button.style = discord.ButtonStyle.green        
+            button.style = discord.ButtonStyle.green
+            config['replace_blacklist'][interaction.user.id].remove('shorts')
+        with open('config.yml', 'w') as config_file:
+            yaml.dump(config, config_file)
         await interaction.response.edit_message(view=self)
 
 
@@ -65,24 +78,32 @@ async def send_replacement_message(modified_message, author, channel, webhook):
     return sent_message, webhook
 
 
-async def update_replace_blacklist(ctx, add_to_list, config):
+async def replace_blacklist_settings(ctx, worker):
+    with open('config.yml', 'r') as config_file:
+        config = yaml.safe_load(config_file)
+
+    # If the user is not in the replace_blacklist dict, add them
+    if ctx.author.id not in config['replace_blacklist']:
+        config['replace_blacklist'][ctx.author.id] = []
+        with open('config.yml', 'w') as config_file:
+            yaml.dump(config, config_file)
+
     user_id = ctx.author.id
-    if add_to_list and user_id not in config['replace_blacklist']:
-        config['replace_blacklist'].append(user_id)
-        message = "Got it! I won't replace replace your links anymore <a:ralseiBoom:899406996007190549>"
-        
-        print("Added " + str(user_id) + " to replace_blacklist")
-    elif not add_to_list and user_id in config['replace_blacklist']:
-        config['replace_blacklist'].remove(user_id)
-        message = "Got it! I'll start replacing your links again <a:ralseiBlunt:899401210870763610>"
-        print("Removed " + str(user_id) + " from replace_blacklist")
-    else:
-        message = "You already have link replacements " + (
-            "disabled" if add_to_list else "enabled") + " <a:duckSpin:892990312732053544>"
-
-    with open('config.yml', 'w') as edit_config:
-        yaml.dump(config, edit_config)
-
-    sent_message = await ctx.send(message)
+    # Send embed message
+    embed = discord.Embed(title="Message Replacement Settings", description="Select which types of messages you would like to be replaced.", color=0x00ff00)
     view = replace_settings_view()
-    await sent_message.edit(view=view)
+
+    # Set all of the buttons in the view to the correct state
+    if user_id in config['replace_blacklist']:
+        if "twitter" in config['replace_blacklist'][user_id]:
+            view.children[0].style = discord.ButtonStyle.red
+        if "reddit" in config['replace_blacklist'][user_id]:
+            view.children[1].style = discord.ButtonStyle.red
+        if "shorts" in config['replace_blacklist'][user_id]:
+            view.children[2].style = discord.ButtonStyle.red
+
+    message = await ctx.respond(embed=embed, view=view, ephemeral=True)
+    await asyncio.sleep(60)
+    print("Deleting message")
+    message.delete()
+    worker.cancel()
