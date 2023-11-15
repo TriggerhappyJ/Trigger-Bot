@@ -19,11 +19,12 @@ class replace_settings_view(discord.ui.View):
     async def twitter_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
-            config['replace_blacklist'][interaction.user.id].append('twitter')
-            print("Adding twitter to config")
+            config['replace_blacklist'][interaction.user.id].append('https://twitter.com/')
+            config['replace_blacklist'][interaction.user.id].append('https://x.com/')
         else:
             button.style = discord.ButtonStyle.green
-            config['replace_blacklist'][interaction.user.id].remove('twitter')
+            config['replace_blacklist'][interaction.user.id].remove('https://twitter.com/')
+            config['replace_blacklist'][interaction.user.id].remove('https://x.com/')
         with open('config.yml', 'w') as config_file:
             yaml.dump(config, config_file)
         await interaction.response.edit_message(view=self)
@@ -32,10 +33,12 @@ class replace_settings_view(discord.ui.View):
     async def reddit_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
-            config['replace_blacklist'][interaction.user.id].append('reddit')
+            config['replace_blacklist'][interaction.user.id].append('https://www.reddit.com/')
+            config['replace_blacklist'][interaction.user.id].append('https://old.reddit.com/')
         else:
             button.style = discord.ButtonStyle.green
-            config['replace_blacklist'][interaction.user.id].remove('reddit')
+            config['replace_blacklist'][interaction.user.id].remove('https://www.reddit.com/')
+            config['replace_blacklist'][interaction.user.id].remove('https://old.reddit.com/')
         with open('config.yml', 'w') as config_file:
             yaml.dump(config, config_file)
         await interaction.response.edit_message(view=self)
@@ -44,10 +47,10 @@ class replace_settings_view(discord.ui.View):
     async def shorts_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
-            config['replace_blacklist'][interaction.user.id].append('shorts')
+            config['replace_blacklist'][interaction.user.id].append('https://www.youtube.com/shorts/')
         else:
             button.style = discord.ButtonStyle.green
-            config['replace_blacklist'][interaction.user.id].remove('shorts')
+            config['replace_blacklist'][interaction.user.id].remove('https://www.youtube.com/shorts/')
         with open('config.yml', 'w') as config_file:
             yaml.dump(config, config_file)
         await interaction.response.edit_message(view=self)
@@ -79,8 +82,7 @@ async def send_replacement_message(modified_message, author, channel, webhook):
 
 
 async def replace_blacklist_settings(ctx, worker):
-    with open('config.yml', 'r') as config_file:
-        config = yaml.safe_load(config_file)
+    config.get('replace_blacklist', set())
 
     # If the user is not in the replace_blacklist dict, add them
     if ctx.author.id not in config['replace_blacklist']:
@@ -90,20 +92,18 @@ async def replace_blacklist_settings(ctx, worker):
 
     user_id = ctx.author.id
     # Send embed message
-    embed = discord.Embed(title="Message Replacement Settings", description="Select which types of messages you would like to be replaced.", color=0x00ff00)
+    embed = discord.Embed(title="Link Replacement Settings", description="Select which types of links you would like to be replaced.", color=0xc01e2e)
     view = replace_settings_view()
 
     # Set all of the buttons in the view to the correct state
     if user_id in config['replace_blacklist']:
-        if "twitter" in config['replace_blacklist'][user_id]:
+        if "https://twitter.com/" in config['replace_blacklist'][user_id]:
             view.children[0].style = discord.ButtonStyle.red
-        if "reddit" in config['replace_blacklist'][user_id]:
+        if "https://www.reddit.com/" in config['replace_blacklist'][user_id]:
             view.children[1].style = discord.ButtonStyle.red
-        if "shorts" in config['replace_blacklist'][user_id]:
+        if "https://www.youtube.com/shorts/" in config['replace_blacklist'][user_id]:
             view.children[2].style = discord.ButtonStyle.red
 
     message = await ctx.respond(embed=embed, view=view, ephemeral=True)
     await asyncio.sleep(60)
-    print("Deleting message")
-    message.delete()
     worker.cancel()

@@ -58,7 +58,7 @@ async def on_ready():
 
 @bot.listen('on_message')
 async def replace_link(message):
-    if message.author == bot.user or message.author.id in config.get('replace_blacklist', set()):
+    if message.author == bot.user:
         return
 
     replacements = {
@@ -71,6 +71,11 @@ async def replace_link(message):
 
     for prefix, replacement in replacements.items():
         if message.content.startswith(prefix):
+            with open('config.yml', 'r') as config_file:
+                config = yaml.safe_load(config_file)
+                if prefix in config['replace_blacklist'][message.author.id]:
+                    return
+
             modified_message = message.content.replace(prefix, replacement)
 
             webhook = await create_webhook_if_not_exists(message.channel, config, bot)
