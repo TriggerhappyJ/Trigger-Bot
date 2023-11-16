@@ -153,3 +153,4 @@ cython_debug/
 credentials.py
 .idea/.idea.Trigger-Bot.dir/.idea/workspace.xml
 .idea/.idea.Trigger-Bot.dir/.idea/projectSettingsUpdater.xml
+.idea/.idea.Trigger-Bot.dir/.idea/vcs.xml

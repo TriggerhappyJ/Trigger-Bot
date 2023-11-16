@@ -17,7 +17,7 @@ freeGames = bot.create_group("freegames", "Commands related to the Epic Games St
 linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
 settings = bot.create_group("settings", "Commands related to bot settings")
 
-with open('config.yml', 'r') as config_file:
+with open('yaml/config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
     startup_status_message = config['startup_status_message']
     startup_status_type = config['startup_status_type']
@@ -71,9 +71,9 @@ async def replace_link(message):
 
     for prefix, replacement in replacements.items():
         if message.content.startswith(prefix):
-            with open('config.yml', 'r') as config_file:
-                config = yaml.safe_load(config_file)
-                if prefix in config['replace_blacklist'][message.author.id]:
+            with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
+                replace_blacklist = yaml.safe_load(blacklist_file)
+                if prefix in replace_blacklist['replace_blacklist'][message.author.id]:
                     return
 
             modified_message = message.content.replace(prefix, replacement)
@@ -94,7 +94,7 @@ async def edit_link_replacements(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
                    description="Shows the current free games on the Epic Games Store")
 async def current_games(ctx):
-    with open('epicgames.yml', 'r') as epic_file:
+    with open('yaml/epicgames.yml', 'r') as epic_file:
         epic_free_games = yaml.safe_load(epic_file)
     free_games_list = epic_free_games['current_free_games']
     for game in free_games_list:
@@ -106,7 +106,7 @@ async def current_games(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="upcoming",
                    description="Shows the upcoming free games on the Epic Games Store")
 async def upcoming_games(ctx):
-    with open('epicgames.yml', 'r') as epic_file:
+    with open('yaml/epicgames.yml', 'r') as epic_file:
         epic_free_games = yaml.safe_load(epic_file)
     free_games_list = epic_free_games['upcoming_free_games']
     for game in free_games_list:
@@ -118,7 +118,7 @@ async def upcoming_games(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
                    description="Use to toggle posting of current free games in current channel")
 async def toggle_current_games_channel(ctx):
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
 
@@ -137,7 +137,7 @@ async def toggle_current_games_channel(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
                    description="Use to toggle posting of upcoming free games in current channel")
 async def toggle_upcoming_games_channel(ctx):
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
 
@@ -166,7 +166,7 @@ async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streamin
     }
 
     if ctx.author.id == allowed_user_id:
-        with open('config.yml', 'w') as edit_config:
+        with open('yaml/config.yml', 'w') as edit_config:
             config['running_status_type'] = status_type
             config['running_status_message'] = status_message
             yaml.dump(config, edit_config)
@@ -185,7 +185,7 @@ async def on_guild_join(guild):
     print("Joined guild: " + guild.name)
     guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': []}
     config['guilds'].append(guilds)
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         yaml.dump(config, edit_config)
 
 
@@ -196,7 +196,7 @@ async def on_guild_remove(guild):
     for guilds in config['guilds']:
         if guilds['guild_id'] == guild.id:
             config['guilds'].remove(guilds)
-            with open('config.yml', 'w') as edit_config:
+            with open('yaml/config.yml', 'w') as edit_config:
                 yaml.dump(config, edit_config)
 
 async def task_consumer():

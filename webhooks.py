@@ -3,7 +3,7 @@ import discord
 import asyncio
 
 # Get the max number of webhooks from the config file
-with open('config.yml', 'r') as config_file:
+with open('yaml/config.yml', 'r') as config_file:
     webhook_config = yaml.safe_load(config_file)
     max_webhooks = webhook_config['max_webhooks']
 
@@ -41,7 +41,7 @@ async def manage_webhooks(channel, webhook, guild_id, config, guild_name):
 
     guilds['webhooks'].append(entry)
 
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         yaml.dump(config, edit_config)
 
 
@@ -73,7 +73,7 @@ def clear_webhooks_for_guild(guild_id, config):
         guilds['webhooks'] = []  # Clear the list of webhooks for this guild
         print(f"Cleared existing webhooks for guild with ID {guild_id}")
 
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         yaml.dump(config, edit_config)
 
 
@@ -84,7 +84,7 @@ async def handle_webhook_startup(bot, config):
         if guilds is None:
             guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': []}
             config['guilds'].append(guilds)
-            with open('config.yml', 'w') as edit_config:
+            with open('yaml/config.yml', 'w') as edit_config:
                 yaml.dump(config, edit_config)
 
         for channel in guild.text_channels:

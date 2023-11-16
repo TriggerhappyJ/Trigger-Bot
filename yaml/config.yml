@@ -8,10 +8,6 @@ guilds:
     webhook_id: 1174471725455511575
     webhook_url: https://discord.com/api/webhooks/1174471725455511575/eIv_8-yLUCyPmcyvi00vRqW2AbbDkTNouozlHu_xNniHC2XNOo_lohWa5IAAT_PBId6d
 max_webhooks: 12
-replace_blacklist:
-  233484220138258432:
-  - https://twitter.com/
-  - https://x.com/
 replacement_timeout: 30
 running_status_message: you
 running_status_type: 3
