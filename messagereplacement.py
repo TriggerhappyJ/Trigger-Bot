@@ -2,13 +2,8 @@
 import discord
 import asyncio
 
-with open('yaml/config.yml', 'r') as config_file:
-    config = yaml.safe_load(config_file)
-    replacement_timeout = config['replacement_timeout']
-    
 with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
     replace_blacklist = yaml.safe_load(blacklist_file)
-
 
 class message_delete_view(discord.ui.View):
     @discord.ui.button(label="", style=discord.ButtonStyle.red, emoji="🗑")
@@ -71,9 +66,8 @@ async def handle_message_replacement(message, modified_message, worker, webhook,
     view = message_delete_view()
     await sent_message.edit(view=view)
 
-    await asyncio.sleep(replacement_timeout)
+    await asyncio.sleep(30)
     await sent_message.edit(view=None)
-
     worker.cancel()
 
 
@@ -87,7 +81,6 @@ async def send_replacement_message(modified_message, author, channel, webhook):
 
 async def replace_blacklist_settings(ctx, worker):
     replace_blacklist.get('user_replace_blacklist', set())
-    print(ctx.author.id)
     # If the user is not in the replace_blacklist dict, add them
     if ctx.author.id not in replace_blacklist['user_replace_blacklist']:
         replace_blacklist['user_replace_blacklist'][ctx.author.id] = []

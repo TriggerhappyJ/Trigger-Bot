@@ -13,9 +13,10 @@ intents.members = True
 intents.guilds = True
 bot = discord.Bot(intents=intents)
 
-freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
-linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
-settings = bot.create_group("settings", "Commands related to bot settings")
+freeGames = discord.SlashCommandGroup("freegames", "Commands related to the Epic Games Store")
+linkReplacements = discord.SlashCommandGroup("linkreplacement", "Commands related to link replacements")
+linkReplacementSettings = linkReplacements.create_subgroup("settings", "Commands related to link replacement settings")
+settings = discord.SlashCommandGroup("settings", "Commands related to bot settings")
 
 with open('yaml/config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
@@ -58,7 +59,7 @@ async def on_ready():
 
 @bot.listen('on_message')
 async def replace_link(message):
-    if message.author == bot.user:
+    if message.author == bot.user or message.webhook_id is not None:
         return
 
     replacements = {
@@ -73,8 +74,10 @@ async def replace_link(message):
         with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
             replace_blacklist = yaml.safe_load(blacklist_file)
             if message.guild.id in replace_blacklist['guild_replace_blacklist']:
+                print("Guild check")
                 return
             if prefix in replace_blacklist['user_replace_blacklist'][message.author.id]:
+                print("Prefix check")
                 return
 
         if message.content.startswith(prefix):
@@ -85,15 +88,15 @@ async def replace_link(message):
             break
 
 
-@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="settings",
-                          description="Allows you to choose what message types get replaced")
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="user",
+                                 description="Allows you to choose what link types get replaced")
 async def edit_link_replacements(ctx):
     worker = asyncio.create_task(task_consumer())
     await job_queue.put(lambda: replace_blacklist_settings(ctx, worker))
 
 
-@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="toggle", 
-                          description="Toggles whether the bot will replace links in this server")
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="toggle",
+                                 description="Toggles whether the bot will replace links in this server")
 @discord.default_permissions(manage_messages=True)
 async def toggle_guild_link_replacements(ctx):
     with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
@@ -106,6 +109,18 @@ async def toggle_guild_link_replacements(ctx):
             await ctx.respond("I will stop replacing links in this server <a:ralseiBoom:899406996007190549>")
     with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
         yaml.dump(replace_blacklist, blacklist_file)
+
+
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="settimeout",
+                                 description="Set this server's link replacement timeout")
+@discord.default_permissions(manage_messages=True)
+async def set_guild_link_replacement_timeout(ctx, timeout: discord.Option(int, "The timeout in seconds (Default: 30)")):
+    with open('yaml/config.yml', 'w') as config_file:
+        guild = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
+        guild['replacement_timeout'] = timeout
+        yaml.dump(config, config_file)
+    await ctx.respond(
+        "This server's replacement timeout is now ***" + str(timeout) + "*** *seconds* <a:duckSpin:892990312732053544>")
 
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
@@ -127,10 +142,11 @@ async def upcoming_games(ctx):
         epic_free_games = yaml.safe_load(epic_file)
     free_games_list = epic_free_games['upcoming_free_games']
     for game in free_games_list:
-        await ctx.send(embed=generate_free_game_embed(free_games_list, game, "upcoming", epic_free_games['update_time']))
+        await ctx.send(
+            embed=generate_free_game_embed(free_games_list, game, "upcoming", epic_free_games['update_time']))
     await ctx.respond(
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
-    
+
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
                    description="Use to toggle posting of current free games in current channel")
@@ -169,7 +185,8 @@ async def toggle_upcoming_games_channel(ctx):
             # Removes the current channel from the guilds current games channel list if it is already in it
             guilds['upcoming_games_channels'].remove(ctx.channel.id)
             yaml.dump(config, edit_config)
-            await ctx.respond("I won't send upcoming free games messages here anymore <a:ralseiBoom:899406996007190549>")
+            await ctx.respond(
+                "I won't send upcoming free games messages here anymore <a:ralseiBoom:899406996007190549>")
 
 
 @settings.command(guild_ids=[741435438807646268, 369336391467008002], name="setstatus",
@@ -202,7 +219,8 @@ async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streamin
 @bot.event
 async def on_guild_join(guild):
     print("Joined guild: " + guild.name)
-    guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': []}
+    guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [],
+              'upcoming_games_channels': [], 'replacement_timeout': 30}
     config['guilds'].append(guilds)
     with open('yaml/config.yml', 'w') as edit_config:
         yaml.dump(config, edit_config)
@@ -225,5 +243,8 @@ async def task_consumer():
         await task()
         job_queue.task_done()
 
+bot.add_application_command(freeGames)
+bot.add_application_command(settings)
+bot.add_application_command(linkReplacements)
 
 bot.run(canary_token)
