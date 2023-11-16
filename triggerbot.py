@@ -70,14 +70,15 @@ async def replace_link(message):
     }
 
     for prefix, replacement in replacements.items():
+        with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
+            replace_blacklist = yaml.safe_load(blacklist_file)
+            if message.guild.id in replace_blacklist['guild_replace_blacklist']:
+                return
+            if prefix in replace_blacklist['user_replace_blacklist'][message.author.id]:
+                return
+
         if message.content.startswith(prefix):
-            with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
-                replace_blacklist = yaml.safe_load(blacklist_file)
-                if prefix in replace_blacklist['replace_blacklist'][message.author.id]:
-                    return
-
             modified_message = message.content.replace(prefix, replacement)
-
             webhook = await create_webhook_if_not_exists(message.channel, config, bot)
             worker = asyncio.create_task(task_consumer())
             await job_queue.put(lambda: handle_message_replacement(message, modified_message, worker, webhook, bot))
@@ -89,6 +90,22 @@ async def replace_link(message):
 async def edit_link_replacements(ctx):
     worker = asyncio.create_task(task_consumer())
     await job_queue.put(lambda: replace_blacklist_settings(ctx, worker))
+
+
+@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="toggle", 
+                          description="Toggles whether the bot will replace links in this server")
+@discord.default_permissions(manage_messages=True)
+async def toggle_guild_link_replacements(ctx):
+    with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
+        replace_blacklist = yaml.safe_load(blacklist_file)
+        if ctx.guild.id in replace_blacklist['guild_replace_blacklist']:
+            replace_blacklist['guild_replace_blacklist'].remove(ctx.guild.id)
+            await ctx.respond("I will now replace links in this server <a:ralseiBlunt:899401210870763610>")
+        else:
+            replace_blacklist['guild_replace_blacklist'].append(ctx.guild.id)
+            await ctx.respond("I will stop replacing links in this server <a:ralseiBoom:899406996007190549>")
+    with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
+        yaml.dump(replace_blacklist, blacklist_file)
 
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
@@ -117,6 +134,7 @@ async def upcoming_games(ctx):
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
                    description="Use to toggle posting of current free games in current channel")
+@discord.default_permissions(manage_messages=True)
 async def toggle_current_games_channel(ctx):
     with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
@@ -136,6 +154,7 @@ async def toggle_current_games_channel(ctx):
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
                    description="Use to toggle posting of upcoming free games in current channel")
+@discord.default_permissions(manage_messages=True)
 async def toggle_upcoming_games_channel(ctx):
     with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
@@ -198,6 +217,7 @@ async def on_guild_remove(guild):
             config['guilds'].remove(guilds)
             with open('yaml/config.yml', 'w') as edit_config:
                 yaml.dump(config, edit_config)
+
 
 async def task_consumer():
     while True:

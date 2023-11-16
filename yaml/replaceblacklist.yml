@@ -1,3 +1,5 @@
-replace_blacklist:
+guild_replace_blacklist: []
+user_replace_blacklist:
   233484220138258432:
-  - https://www.youtube.com/shorts/
+  - https://twitter.com/
+  - https://x.com/

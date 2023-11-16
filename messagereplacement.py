@@ -9,6 +9,7 @@ with open('yaml/config.yml', 'r') as config_file:
 with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
     replace_blacklist = yaml.safe_load(blacklist_file)
 
+
 class message_delete_view(discord.ui.View):
     @discord.ui.button(label="", style=discord.ButtonStyle.red, emoji="🗑")
     async def button_callback(self, button, interaction):
@@ -22,12 +23,12 @@ class replace_settings_view(discord.ui.View):
     async def twitter_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
-            replace_blacklist['replace_blacklist'][interaction.user.id].append('https://twitter.com/')
-            replace_blacklist['replace_blacklist'][interaction.user.id].append('https://x.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://twitter.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://x.com/')
         else:
             button.style = discord.ButtonStyle.green
-            replace_blacklist['replace_blacklist'][interaction.user.id].remove('https://twitter.com/')
-            replace_blacklist['replace_blacklist'][interaction.user.id].remove('https://x.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://twitter.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://x.com/')
         with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
             yaml.dump(replace_blacklist, blacklist_file)
         await interaction.response.edit_message(view=self)
@@ -36,12 +37,12 @@ class replace_settings_view(discord.ui.View):
     async def reddit_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
-            replace_blacklist['replace_blacklist'][interaction.user.id].append('https://www.reddit.com/')
-            replace_blacklist['replace_blacklist'][interaction.user.id].append('https://old.reddit.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://www.reddit.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://old.reddit.com/')
         else:
             button.style = discord.ButtonStyle.green
-            replace_blacklist['replace_blacklist'][interaction.user.id].remove('https://www.reddit.com/')
-            replace_blacklist['replace_blacklist'][interaction.user.id].remove('https://old.reddit.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://www.reddit.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://old.reddit.com/')
         with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
             yaml.dump(replace_blacklist, blacklist_file)
         await interaction.response.edit_message(view=self)
@@ -50,10 +51,10 @@ class replace_settings_view(discord.ui.View):
     async def shorts_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
-            replace_blacklist['replace_blacklist'][interaction.user.id].append('https://www.youtube.com/shorts/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://www.youtube.com/shorts/')
         else:
             button.style = discord.ButtonStyle.green
-            replace_blacklist['replace_blacklist'][interaction.user.id].remove('https://www.youtube.com/shorts/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://www.youtube.com/shorts/')
         with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
             yaml.dump(replace_blacklist, blacklist_file)
         await interaction.response.edit_message(view=self)
@@ -85,11 +86,11 @@ async def send_replacement_message(modified_message, author, channel, webhook):
 
 
 async def replace_blacklist_settings(ctx, worker):
-    replace_blacklist.get('replace_blacklist', set())
-
+    replace_blacklist.get('user_replace_blacklist', set())
+    print(ctx.author.id)
     # If the user is not in the replace_blacklist dict, add them
-    if ctx.author.id not in replace_blacklist['replace_blacklist']:
-        replace_blacklist['replace_blacklist'][ctx.author.id] = []
+    if ctx.author.id not in replace_blacklist['user_replace_blacklist']:
+        replace_blacklist['user_replace_blacklist'][ctx.author.id] = []
         with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
             yaml.dump(replace_blacklist, blacklist_file)
 
@@ -100,12 +101,12 @@ async def replace_blacklist_settings(ctx, worker):
     view = replace_settings_view()
 
     # Set all of the buttons in the view to the correct state
-    if user_id in replace_blacklist['replace_blacklist']:
-        if "https://twitter.com/" in replace_blacklist['replace_blacklist'][user_id]:
+    if user_id in replace_blacklist['user_replace_blacklist']:
+        if "https://twitter.com/" in replace_blacklist['user_replace_blacklist'][user_id]:
             view.children[0].style = discord.ButtonStyle.red
-        if "https://www.reddit.com/" in replace_blacklist['replace_blacklist'][user_id]:
+        if "https://www.reddit.com/" in replace_blacklist['user_replace_blacklist'][user_id]:
             view.children[1].style = discord.ButtonStyle.red
-        if "https://www.youtube.com/shorts/" in replace_blacklist['replace_blacklist'][user_id]:
+        if "https://www.youtube.com/shorts/" in replace_blacklist['user_replace_blacklist'][user_id]:
             view.children[2].style = discord.ButtonStyle.red
 
     message = await ctx.respond(embed=embed, view=view, ephemeral=True)
