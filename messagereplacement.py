@@ -93,6 +93,7 @@ async def replace_blacklist_settings(ctx, worker):
     user_id = ctx.author.id
     # Send embed message
     embed = discord.Embed(title="Link Replacement Settings", description="Select which types of links you would like to be replaced.", color=0xc01e2e)
+    embed.set_footer(text="This popup will close in 60 seconds.")
     view = replace_settings_view()
 
     # Set all of the buttons in the view to the correct state
@@ -106,4 +107,5 @@ async def replace_blacklist_settings(ctx, worker):
 
     message = await ctx.respond(embed=embed, view=view, ephemeral=True)
     await asyncio.sleep(60)
+    await message.delete_original_response()
     worker.cancel()
