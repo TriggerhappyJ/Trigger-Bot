@@ -13,7 +13,8 @@ intents.members = True
 intents.guilds = True
 bot = discord.Bot(intents=intents)
 
-freeGames = discord.SlashCommandGroup("freegames", "Commands related to the Epic Games Store")
+freeGames = discord.SlashCommandGroup("freegames", "Commands related to free games from the Epic Games store")
+freeGamesSettings = freeGames.create_subgroup("settings", "Commands related to free games from the Epic Games store settings")
 linkReplacements = discord.SlashCommandGroup("linkreplacement", "Commands related to link replacements")
 linkReplacementSettings = linkReplacements.create_subgroup("settings", "Commands related to link replacement settings")
 settings = discord.SlashCommandGroup("settings", "Commands related to bot settings")
@@ -148,7 +149,7 @@ async def upcoming_games(ctx):
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
 
 
-@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
                    description="Use to toggle posting of current free games in current channel")
 @discord.default_permissions(manage_messages=True)
 async def toggle_current_games_channel(ctx):
@@ -168,7 +169,7 @@ async def toggle_current_games_channel(ctx):
             await ctx.respond("I won't send current free games messages here anymore <a:ralseiBoom:899406996007190549>")
 
 
-@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
                    description="Use to toggle posting of upcoming free games in current channel")
 @discord.default_permissions(manage_messages=True)
 async def toggle_upcoming_games_channel(ctx):

@@ -80,10 +80,11 @@ def clear_webhooks_for_guild(guild_id, config):
 async def handle_webhook_startup(bot, config):
     for guild in bot.guilds:
         # Find if the guild is in config, if not then add an entry for it
-        guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == guild.id), None)
-        if guilds is None:
-            guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': [], 'replacement_timeout': 30}
+        if next((entry for entry in config['guilds'] if entry['guild_id'] == guild.id), None) is None:
+            guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [],
+                      'upcoming_games_channels': [], 'replacement_timeout': 30}
             config['guilds'].append(guilds)
+            print("Added guild " + str(guild.id) + " to config file")
             with open('yaml/config.yml', 'w') as edit_config:
                 yaml.dump(config, edit_config)
 

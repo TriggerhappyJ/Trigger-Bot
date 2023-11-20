@@ -5,6 +5,7 @@ import asyncio
 with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
     replace_blacklist = yaml.safe_load(blacklist_file)
 
+
 class message_delete_view(discord.ui.View):
     @discord.ui.button(label="", style=discord.ButtonStyle.red, emoji="🗑")
     async def button_callback(self, button, interaction):
@@ -65,8 +66,15 @@ async def handle_message_replacement(message, modified_message, worker, webhook,
 
     view = message_delete_view()
     await sent_message.edit(view=view)
+    
+    # Get the guild's replace timeout
+    with open('yaml/config.yml', 'r') as config_file:
+        config = yaml.safe_load(config_file)
+        guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == channel.guild.id), None)
+        replace_timeout = guilds['replacement_timeout']
+        print("Set timeout")
 
-    await asyncio.sleep(30)
+    await asyncio.sleep(replace_timeout)
     await sent_message.edit(view=None)
     worker.cancel()
 
