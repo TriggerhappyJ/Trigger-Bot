@@ -248,4 +248,4 @@ bot.add_application_command(freeGames)
 bot.add_application_command(settings)
 bot.add_application_command(linkReplacements)
 
-bot.run(canary_token)
+bot.run(token)
