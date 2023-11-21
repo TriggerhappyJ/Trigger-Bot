@@ -95,10 +95,10 @@ async def check_epic_free_games(worker, bot):
         current_games_list = current_free_games()
         upcoming_games_list = upcoming_free_games()
 
-        with open('epicgames.yml', 'r') as epic_file:
+        with open('yaml/epicgames.yml', 'r') as epic_file:
             epic_config = yaml.safe_load(epic_file)
 
-        with open('config.yml', 'r') as config_file:
+        with open('yaml/config.yml', 'r') as config_file:
             config = yaml.safe_load(config_file)
 
         print("Checking for free games...  Current time: " + str(datetime.now())[:-7])
@@ -129,7 +129,7 @@ async def check_epic_free_games(worker, bot):
         else: 
             print("Upcoming free games are the same!")
 
-        with open('epicgames.yml', 'w') as edit_epicgames:
+        with open('yaml/epicgames.yml', 'w') as edit_epicgames:
             yaml.dump(epic_config, edit_epicgames)
 
         await asyncio.sleep(14400)

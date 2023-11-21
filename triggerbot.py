@@ -3,7 +3,7 @@ import asyncio
 import yaml
 from credentials import token, canary_token
 from epicgames import current_free_games, upcoming_free_games, generate_free_game_embed, check_epic_free_games
-from messagereplacement import handle_message_replacement, update_replace_blacklist
+from messagereplacement import handle_message_replacement, replace_blacklist_settings
 from webhooks import create_webhook_if_not_exists, manage_webhooks, clear_webhooks_for_guild, handle_webhook_startup
 
 intents = discord.Intents.default()
@@ -13,11 +13,13 @@ intents.members = True
 intents.guilds = True
 bot = discord.Bot(intents=intents)
 
-freeGames = bot.create_group("freegames", "Commands related to the Epic Games Store")
-linkReplacements = bot.create_group("linkreplacement", "Commands related to link replacements")
-settings = bot.create_group("settings", "Commands related to bot settings")
+freeGames = discord.SlashCommandGroup("freegames", "Commands related to free games from the Epic Games store")
+freeGamesSettings = freeGames.create_subgroup("settings", "Commands related to free games from the Epic Games store settings")
+linkReplacements = discord.SlashCommandGroup("linkreplacement", "Commands related to link replacements")
+linkReplacementSettings = linkReplacements.create_subgroup("settings", "Commands related to link replacement settings")
+settings = discord.SlashCommandGroup("settings", "Commands related to bot settings")
 
-with open('config.yml', 'r') as config_file:
+with open('yaml/config.yml', 'r') as config_file:
     config = yaml.safe_load(config_file)
     startup_status_message = config['startup_status_message']
     startup_status_type = config['startup_status_type']
@@ -58,7 +60,7 @@ async def on_ready():
 
 @bot.listen('on_message')
 async def replace_link(message):
-    if message.author == bot.user or message.author.id in config.get('replace_blacklist', set()):
+    if message.author == bot.user or message.webhook_id is not None:
         return
 
     replacements = {
@@ -70,31 +72,62 @@ async def replace_link(message):
     }
 
     for prefix, replacement in replacements.items():
+        with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
+            replace_blacklist = yaml.safe_load(blacklist_file)
+            if message.guild.id in replace_blacklist['guild_replace_blacklist']:
+                print("Guild check")
+                return
+            if prefix in replace_blacklist['user_replace_blacklist'][message.author.id]:
+                print("Prefix check")
+                return
+
         if message.content.startswith(prefix):
             modified_message = message.content.replace(prefix, replacement)
-
             webhook = await create_webhook_if_not_exists(message.channel, config, bot)
             worker = asyncio.create_task(task_consumer())
             await job_queue.put(lambda: handle_message_replacement(message, modified_message, worker, webhook, bot))
             break
 
 
-@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="stop",
-                          description="Stops the bot from replacing links you post")
-async def stop_link_replacements(ctx):
-    await update_replace_blacklist(ctx, add_to_list=True, config=config)
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="user",
+                                 description="Allows you to choose what link types get replaced")
+async def edit_link_replacements(ctx):
+    worker = asyncio.create_task(task_consumer())
+    await job_queue.put(lambda: replace_blacklist_settings(ctx, worker))
 
 
-@linkReplacements.command(guild_ids=[741435438807646268, 369336391467008002], name="start",
-                          description="Starts the bot replacing links you post")
-async def start_link_replacements(ctx):
-    await update_replace_blacklist(ctx, add_to_list=False, config=config)
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="toggle",
+                                 description="Toggles whether the bot will replace links in this server")
+@discord.default_permissions(manage_messages=True)
+async def toggle_guild_link_replacements(ctx):
+    with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
+        replace_blacklist = yaml.safe_load(blacklist_file)
+        if ctx.guild.id in replace_blacklist['guild_replace_blacklist']:
+            replace_blacklist['guild_replace_blacklist'].remove(ctx.guild.id)
+            await ctx.respond("I will now replace links in this server <a:ralseiBlunt:899401210870763610>")
+        else:
+            replace_blacklist['guild_replace_blacklist'].append(ctx.guild.id)
+            await ctx.respond("I will stop replacing links in this server <a:ralseiBoom:899406996007190549>")
+    with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
+        yaml.dump(replace_blacklist, blacklist_file)
+
+
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="settimeout",
+                                 description="Set this server's link replacement timeout")
+@discord.default_permissions(manage_messages=True)
+async def set_guild_link_replacement_timeout(ctx, timeout: discord.Option(int, "The timeout in seconds (Default: 30)")):
+    with open('yaml/config.yml', 'w') as config_file:
+        guild = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
+        guild['replacement_timeout'] = timeout
+        yaml.dump(config, config_file)
+    await ctx.respond(
+        "This server's replacement timeout is now ***" + str(timeout) + "*** *seconds* <a:duckSpin:892990312732053544>")
 
 
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
                    description="Shows the current free games on the Epic Games Store")
 async def current_games(ctx):
-    with open('epicgames.yml', 'r') as epic_file:
+    with open('yaml/epicgames.yml', 'r') as epic_file:
         epic_free_games = yaml.safe_load(epic_file)
     free_games_list = epic_free_games['current_free_games']
     for game in free_games_list:
@@ -106,19 +139,21 @@ async def current_games(ctx):
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="upcoming",
                    description="Shows the upcoming free games on the Epic Games Store")
 async def upcoming_games(ctx):
-    with open('epicgames.yml', 'r') as epic_file:
+    with open('yaml/epicgames.yml', 'r') as epic_file:
         epic_free_games = yaml.safe_load(epic_file)
     free_games_list = epic_free_games['upcoming_free_games']
     for game in free_games_list:
-        await ctx.send(embed=generate_free_game_embed(free_games_list, game, "upcoming", epic_free_games['update_time']))
+        await ctx.send(
+            embed=generate_free_game_embed(free_games_list, game, "upcoming", epic_free_games['update_time']))
     await ctx.respond(
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
-    
 
-@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
+
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
                    description="Use to toggle posting of current free games in current channel")
+@discord.default_permissions(manage_messages=True)
 async def toggle_current_games_channel(ctx):
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
 
@@ -134,10 +169,11 @@ async def toggle_current_games_channel(ctx):
             await ctx.respond("I won't send current free games messages here anymore <a:ralseiBoom:899406996007190549>")
 
 
-@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
                    description="Use to toggle posting of upcoming free games in current channel")
+@discord.default_permissions(manage_messages=True)
 async def toggle_upcoming_games_channel(ctx):
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
 
@@ -150,7 +186,8 @@ async def toggle_upcoming_games_channel(ctx):
             # Removes the current channel from the guilds current games channel list if it is already in it
             guilds['upcoming_games_channels'].remove(ctx.channel.id)
             yaml.dump(config, edit_config)
-            await ctx.respond("I won't send upcoming free games messages here anymore <a:ralseiBoom:899406996007190549>")
+            await ctx.respond(
+                "I won't send upcoming free games messages here anymore <a:ralseiBoom:899406996007190549>")
 
 
 @settings.command(guild_ids=[741435438807646268, 369336391467008002], name="setstatus",
@@ -166,7 +203,7 @@ async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streamin
     }
 
     if ctx.author.id == allowed_user_id:
-        with open('config.yml', 'w') as edit_config:
+        with open('yaml/config.yml', 'w') as edit_config:
             config['running_status_type'] = status_type
             config['running_status_message'] = status_message
             yaml.dump(config, edit_config)
@@ -183,9 +220,10 @@ async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streamin
 @bot.event
 async def on_guild_join(guild):
     print("Joined guild: " + guild.name)
-    guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [], 'upcoming_games_channels': []}
+    guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [],
+              'upcoming_games_channels': [], 'replacement_timeout': 30}
     config['guilds'].append(guilds)
-    with open('config.yml', 'w') as edit_config:
+    with open('yaml/config.yml', 'w') as edit_config:
         yaml.dump(config, edit_config)
 
 
@@ -196,8 +234,9 @@ async def on_guild_remove(guild):
     for guilds in config['guilds']:
         if guilds['guild_id'] == guild.id:
             config['guilds'].remove(guilds)
-            with open('config.yml', 'w') as edit_config:
+            with open('yaml/config.yml', 'w') as edit_config:
                 yaml.dump(config, edit_config)
+
 
 async def task_consumer():
     while True:
@@ -205,5 +244,8 @@ async def task_consumer():
         await task()
         job_queue.task_done()
 
+bot.add_application_command(freeGames)
+bot.add_application_command(settings)
+bot.add_application_command(linkReplacements)
 
 bot.run(token)
