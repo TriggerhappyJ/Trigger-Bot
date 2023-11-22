@@ -91,14 +91,14 @@ async def replace_link(message):
             break
 
 
-@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="user",
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="user",
                                  description="Allows you to choose what link types get replaced")
 async def edit_link_replacements(ctx):
     worker = asyncio.create_task(task_consumer())
     await job_queue.put(lambda: replace_blacklist_settings(ctx, worker))
 
 
-@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="toggle",
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="toggle",
                                  description="Toggles whether the bot will replace links in this server")
 @discord.default_permissions(manage_messages=True)
 async def toggle_guild_link_replacements(ctx):
@@ -114,7 +114,7 @@ async def toggle_guild_link_replacements(ctx):
         yaml.dump(replace_blacklist, blacklist_file)
 
 
-@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="settimeout",
+@linkReplacementSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="settimeout",
                                  description="Set this server's link replacement timeout")
 @discord.default_permissions(manage_messages=True)
 async def set_guild_link_replacement_timeout(ctx, timeout: discord.Option(int, "The timeout in seconds (Default: 30)")):
@@ -126,7 +126,7 @@ async def set_guild_link_replacement_timeout(ctx, timeout: discord.Option(int, "
         "This server's replacement timeout is now ***" + str(timeout) + "*** *seconds* <a:duckSpin:892990312732053544>")
 
 
-@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="current",
+@freeGames.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="current",
                    description="Shows the current free games on the Epic Games Store")
 async def current_games(ctx):
     with open('yaml/epicgames.yml', 'r') as epic_file:
@@ -138,7 +138,7 @@ async def current_games(ctx):
         "There are a total of " + str(len(free_games_list)) + " free games right now <a:duckSpin:892990312732053544>")
 
 
-@freeGames.command(guild_ids=[741435438807646268, 369336391467008002], name="upcoming",
+@freeGames.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="upcoming",
                    description="Shows the upcoming free games on the Epic Games Store")
 async def upcoming_games(ctx):
     with open('yaml/epicgames.yml', 'r') as epic_file:
@@ -151,7 +151,7 @@ async def upcoming_games(ctx):
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
 
 
-@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="togglecurrentchannel",
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="togglecurrentchannel",
                    description="Use to toggle posting of current free games in current channel")
 @discord.default_permissions(manage_messages=True)
 async def toggle_current_games_channel(ctx):
@@ -171,7 +171,7 @@ async def toggle_current_games_channel(ctx):
             await ctx.respond("I won't send current free games messages here anymore <a:ralseiBoom:899406996007190549>")
 
 
-@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002], name="toggleupcomingchannel",
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="toggleupcomingchannel",
                    description="Use to toggle posting of upcoming free games in current channel")
 @discord.default_permissions(manage_messages=True)
 async def toggle_upcoming_games_channel(ctx):
