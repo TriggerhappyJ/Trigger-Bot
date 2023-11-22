@@ -77,9 +77,11 @@ async def replace_link(message):
             if message.guild.id in replace_blacklist['guild_replace_blacklist']:
                 print("Guild check")
                 return
-            if prefix in replace_blacklist['user_replace_blacklist'][message.author.id]:
-                print("Prefix check")
-                return
+
+            if message.author.id in replace_blacklist['user_replace_blacklist']:
+                if prefix in replace_blacklist['user_replace_blacklist'][message.author.id]:
+                    print("Prefix check")
+                    return
 
         if message.content.startswith(prefix):
             modified_message = message.content.replace(prefix, replacement)
