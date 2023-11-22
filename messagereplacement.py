@@ -9,9 +9,13 @@ with open('yaml/replaceblacklist.yml', 'r') as blacklist_file:
 class message_delete_view(discord.ui.View):
     @discord.ui.button(label="", style=discord.ButtonStyle.red, emoji="🗑")
     async def button_callback(self, button, interaction):
-        await interaction.response.send_message("Message has been deleted!", ephemeral=True)
-        if interaction.message:
-            await interaction.message.delete()
+        # Only deletes the message if the user who clicked the button is the message author
+        if interaction.user.name == interaction.message.author.name:
+            await interaction.response.send_message("Got it, Message has been deleted! <a:ralseiBlunt:899401210870763610>", ephemeral=True)
+            if interaction.message:
+                await interaction.message.delete()
+        else:
+            await interaction.response.send_message("Sorry, You can't delete someone else's message! <a:ralseiBoom:899406996007190549>", ephemeral=True)
 
 
 class replace_settings_view(discord.ui.View):
@@ -66,7 +70,7 @@ async def handle_message_replacement(message, modified_message, worker, webhook,
 
     view = message_delete_view()
     await sent_message.edit(view=view)
-    
+
     # Get the guild's replace timeout
     with open('yaml/config.yml', 'r') as config_file:
         config = yaml.safe_load(config_file)
