@@ -70,7 +70,7 @@ class replace_settings_view(discord.ui.View):
         await interaction.response.edit_message(view=self)
 
     @discord.ui.button(label="Instagram", style=discord.ButtonStyle.green)
-    async def instagram_button_callback(self, button, interaction):
+    async def shorts_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
             button.style = discord.ButtonStyle.red
             replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://www.instagram.com/')
