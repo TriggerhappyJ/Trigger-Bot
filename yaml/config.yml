@@ -1,5 +1,6 @@
 guilds:
-- current_games_channels: []
+- announcement_channel: null
+  current_games_channels: []
   guild_id: 741435438807646268
   guild_name: Jacob's Server of Burgers
   replacement_timeout: 30

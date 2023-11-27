@@ -17,6 +17,7 @@ freeGames = discord.SlashCommandGroup("freegames", "Commands related to free gam
 freeGamesSettings = freeGames.create_subgroup("settings", "Commands related to free games from the Epic Games store settings")
 linkReplacements = discord.SlashCommandGroup("linkreplacement", "Commands related to link replacements")
 linkReplacementSettings = linkReplacements.create_subgroup("settings", "Commands related to link replacement settings")
+announcements = discord.SlashCommandGroup("announcements", "Commands related to announcements")
 settings = discord.SlashCommandGroup("settings", "Commands related to bot settings")
 
 with open('yaml/config.yml', 'r') as config_file:
@@ -219,6 +220,31 @@ async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streamin
             await ctx.respond("You don't have permission to use this command. <a:ralseiBoom:899406996007190549>")
 
 
+@announcements.command(guild_ids=[741435438807646268], name="send", description="Send an announcement")
+async def send_announcement(ctx, message_to_send: discord.Option(str, "The message to send")):
+    allowed_user_id = 233484220138258432
+    if ctx.author.id == allowed_user_id:
+        # Find the message content from the message id
+        message_to_send = await ctx.channel.fetch_message(message_to_send)
+        message_to_send = message_to_send.content
+
+        with open('yaml/config.yml', 'r') as config_file:
+            config = yaml.safe_load(config_file)
+            # Send in the announcement channel for each guild or first channel available to the bot
+            for guilds in config['guilds']:
+                guild = bot.get_guild(guilds['guild_id'])
+                announcement_channel = guild.get_channel(guilds['announcement_channel'])
+                if announcement_channel is None:
+                    for channel in guild.text_channels:
+                        if channel.permissions_for(guild.me).send_messages:
+                            announcement_channel = channel
+                            break
+                await announcement_channel.send(message_to_send)
+        await ctx.respond("Sent announcement <a:ralseiBlunt:899401210870763610>")
+        
+
+
+
 # When the bot is added to a server, add it to config
 @bot.event
 async def on_guild_join(guild):
@@ -250,5 +276,6 @@ async def task_consumer():
 bot.add_application_command(freeGames)
 bot.add_application_command(settings)
 bot.add_application_command(linkReplacements)
+bot.add_application_command(announcements)
 
 bot.run(canary_token)
