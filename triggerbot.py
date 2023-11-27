@@ -17,6 +17,7 @@ freeGames = discord.SlashCommandGroup("freegames", "Commands related to free gam
 freeGamesSettings = freeGames.create_subgroup("settings", "Commands related to free games from the Epic Games store settings")
 linkReplacements = discord.SlashCommandGroup("linkreplacement", "Commands related to link replacements")
 linkReplacementSettings = linkReplacements.create_subgroup("settings", "Commands related to link replacement settings")
+announcements = discord.SlashCommandGroup("announcements", "Commands related to announcements")
 settings = discord.SlashCommandGroup("settings", "Commands related to bot settings")
 
 with open('yaml/config.yml', 'r') as config_file:
@@ -69,6 +70,9 @@ async def replace_link(message):
         'https://www.reddit.com/': 'https://www.rxddit.com/',
         'https://old.reddit.com/': 'https://old.rxddit.com/',
         'https://www.youtube.com/shorts/': 'https://www.youtube.com/watch?v=',
+        'https://www.tiktok.com/': 'https://www.vxtiktok.com/',
+        'https://vt.tiktok.com/': 'https://vt.vxtiktok.com/',
+        'https://www.instagram.com/': 'https://www.ddinstagram.com/',
     }
 
     for prefix, replacement in replacements.items():
@@ -151,49 +155,83 @@ async def upcoming_games(ctx):
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
 
 
-@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="togglecurrentchannel",
-                   description="Use to toggle posting of current free games in current channel")
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="setcurrentchannel",
+                   description="Use to set the channel current free games are posted in")
 @discord.default_permissions(manage_messages=True)
-async def toggle_current_games_channel(ctx):
+async def toggle_current_games_channel(ctx, channel: discord.Option(discord.TextChannel, "The channel to send current free games in")):
     with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
 
-        # Adds the current channel to the guilds current games channel list if it isn't already in it
-        if ctx.channel.id not in guilds['current_games_channels']:
-            guilds['current_games_channels'].append(ctx.channel.id)
+        # Adds the channel to the guilds current games channel list if it isn't already in it
+        if channel.id != guilds['current_games_channel']:
+            guilds['current_games_channel'] = channel.id
             yaml.dump(config, edit_config)
-            await ctx.respond("I'll send current free games messages here now <a:ralseiBlunt:899401210870763610>")
+            await ctx.respond("I'll send current free games in " + channel.name + " now <a:ralseiBlunt:899401210870763610>")
         else:
-            # Removes the current channel from the guilds current games channel list if it is already in it
-            guilds['current_games_channels'].remove(ctx.channel.id)
+            # Removes the channel from the guilds current games channel list if it is already in it
+            guilds['current_games_channel'] = ''
             yaml.dump(config, edit_config)
-            await ctx.respond("I won't send current free games messages here anymore <a:ralseiBoom:899406996007190549>")
+            await ctx.respond("I'll stop sending current free games in " + channel.name + " now <a:ralseiBoom:899406996007190549>")
 
 
-@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="toggleupcomingchannel",
-                   description="Use to toggle posting of upcoming free games in current channel")
+@freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="setupcomingchannel",
+                           description="Use to set the channel upcoming free games are posted in")
 @discord.default_permissions(manage_messages=True)
-async def toggle_upcoming_games_channel(ctx):
+async def toggle_current_games_channel(ctx, channel: discord.Option(discord.TextChannel, "The channel to send upcoming free games in")):
     with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
 
-        # Adds the current channel to the guilds current games channel list if it isn't already in it
-        if ctx.channel.id not in guilds['upcoming_games_channels']:
-            guilds['upcoming_games_channels'].append(ctx.channel.id)
+        # Adds the channel to the guilds current games channel list if it isn't already in it
+        if channel.id != guilds['upcoming_games_channel']:
+            guilds['upcoming_games_channel'] = channel.id
             yaml.dump(config, edit_config)
-            await ctx.respond("I'll send upcoming free games messages here now <a:ralseiBlunt:899401210870763610>")
+            await ctx.respond("I'll send upcoming free games in " + channel.name + " now <a:ralseiBlunt:899401210870763610>")
         else:
-            # Removes the current channel from the guilds current games channel list if it is already in it
-            guilds['upcoming_games_channels'].remove(ctx.channel.id)
+            # Removes the channel from the guilds current games channel list if it is already in it
+            guilds['upcoming_games_channel'] = ''
             yaml.dump(config, edit_config)
-            await ctx.respond(
-                "I won't send upcoming free games messages here anymore <a:ralseiBoom:899406996007190549>")
+            await ctx.respond("I'll stop sending upcoming free games in " + channel.name + " now <a:ralseiBoom:899406996007190549>")
+
+
+@announcements.command(guild_ids=[741435438807646268], name="send", description="Send an announcement")
+async def send_announcement(ctx, message_to_send: discord.Option(str, "The message to send")):
+    allowed_user_id = 233484220138258432
+    if ctx.author.id == allowed_user_id:
+        # Find the message content from the message id
+        message_to_send = await ctx.channel.fetch_message(message_to_send)
+        message_to_send = message_to_send.content
+
+        with open('yaml/config.yml', 'r') as config_file:
+            config = yaml.safe_load(config_file)
+            # Send in the announcement channel for each guild or first channel available to the bot
+            for guilds in config['guilds']:
+                guild = bot.get_guild(guilds['guild_id'])
+                announcement_channel = guild.get_channel(guilds['announcement_channel'])
+                if announcement_channel is None:
+                    for channel in guild.text_channels:
+                        if channel.permissions_for(guild.me).send_messages:
+                            announcement_channel = channel
+                            break
+                await announcement_channel.send(message_to_send)
+        await ctx.respond("Sent announcement <a:ralseiBlunt:899401210870763610>")
+        
+
+@announcements.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="setchannel", 
+                       description="Set the announcement channel")
+@discord.default_permissions(manage_messages=True)
+async def set_announcement_channel(ctx, channel: discord.Option(discord.TextChannel, "The channel to send announcements in")):
+    with open('yaml/config.yml', 'w') as edit_config:
+        # Finds the guild in the config file
+        guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
+        guilds['announcement_channel'] = channel.id
+        yaml.dump(config, edit_config)
+    await ctx.respond("Set announcement channel to " + channel.mention + " <a:ralseiBlunt:899401210870763610>")
 
 
 @settings.command(guild_ids=[741435438807646268, 369336391467008002], name="setstatus",
-                  description="Sets the bots status", )
+                  description="Sets the bots status")
 async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streaming: 1, listening: 2, watching: 3"),
                      status_message: discord.Option(str, "The status message")):
     allowed_user_id = 233484220138258432
@@ -249,5 +287,6 @@ async def task_consumer():
 bot.add_application_command(freeGames)
 bot.add_application_command(settings)
 bot.add_application_command(linkReplacements)
+bot.add_application_command(announcements)
 
 bot.run(token)
