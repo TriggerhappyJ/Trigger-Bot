@@ -208,26 +208,29 @@ async def send_announcement(ctx, message_to_send: discord.Option(str, "The messa
             # Send in the announcement channel for each guild or first channel available to the bot
             for guilds in config['guilds']:
                 guild = bot.get_guild(guilds['guild_id'])
-                announcement_channel = guild.get_channel(guilds['announcement_channel'])
-                if announcement_channel is None:
-                    for channel in guild.text_channels:
-                        if channel.permissions_for(guild.me).send_messages:
-                            announcement_channel = channel
-                            break
-                await announcement_channel.send(message_to_send)
+                if guilds['announcement_channel'] != '':
+                    announcement_channel = guild.get_channel(guilds['announcement_channel'])
+                    await announcement_channel.send(message_to_send)
+                    continue
         await ctx.respond("Sent announcement <a:ralseiBlunt:899401210870763610>")
-        
+
 
 @announcements.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="setchannel", 
                        description="Set the announcement channel")
 @discord.default_permissions(manage_messages=True)
 async def set_announcement_channel(ctx, channel: discord.Option(discord.TextChannel, "The channel to send announcements in")):
     with open('yaml/config.yml', 'w') as edit_config:
-        # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
-        guilds['announcement_channel'] = channel.id
-        yaml.dump(config, edit_config)
-    await ctx.respond("Set announcement channel to " + channel.mention + " <a:ralseiBlunt:899401210870763610>")
+
+        if channel.id != guilds['announcement_channel']:
+            guilds['announcement_channel'] = channel.id
+            yaml.dump(config, edit_config)
+            await ctx.respond("I'll send announcements in " + channel.name + " now <a:ralseiBlunt:899401210870763610>")
+        else:
+            # Removes the channel from the guilds current games channel list if it is already in it
+            guilds['announcement_channel'] = ''
+            yaml.dump(config, edit_config)
+            await ctx.respond("I'll stop sending announcements in " + channel.name + " now <a:ralseiBoom:899406996007190549>")
 
 
 @settings.command(guild_ids=[741435438807646268, 369336391467008002], name="setstatus",
