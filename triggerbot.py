@@ -71,6 +71,7 @@ async def replace_link(message):
         'https://www.youtube.com/shorts/': 'https://www.youtube.com/watch?v=',
         'https://www.tiktok.com/': 'https://www.vxtiktok.com/',
         'https://vt.tiktok.com/': 'https://vt.vxtiktok.com/',
+        'https://www.instagram.com/': 'https://www.ddinstagram.com/',
     }
 
     for prefix, replacement in replacements.items():

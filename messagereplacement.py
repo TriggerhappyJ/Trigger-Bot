@@ -69,6 +69,18 @@ class replace_settings_view(discord.ui.View):
             yaml.dump(replace_blacklist, blacklist_file)
         await interaction.response.edit_message(view=self)
 
+    @discord.ui.button(label="Instagram", style=discord.ButtonStyle.green)
+    async def instagram_button_callback(self, button, interaction):
+        if button.style == discord.ButtonStyle.green:
+            button.style = discord.ButtonStyle.red
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://www.instagram.com/')
+        else:
+            button.style = discord.ButtonStyle.green
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://www.instagram.com/')
+        with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
+            yaml.dump(replace_blacklist, blacklist_file)
+        await interaction.response.edit_message(view=self)
+
 
 async def handle_message_replacement(message, modified_message, worker, webhook, bot):
     author = message.author
@@ -125,6 +137,8 @@ async def replace_blacklist_settings(ctx, worker):
             view.children[2].style = discord.ButtonStyle.red
         if "https://www.tiktok.com/" in replace_blacklist['user_replace_blacklist'][user_id]:
             view.children[3].style = discord.ButtonStyle.red
+        if "https://www.instagram.com/" in replace_blacklist['user_replace_blacklist'][user_id]:
+            view.children[4].style = discord.ButtonStyle.red
 
     message = await ctx.respond(embed=embed, view=view, ephemeral=True)
     # Count down the 60 seconds on the message in 5 second intervals
