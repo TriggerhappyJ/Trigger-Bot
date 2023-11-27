@@ -28,7 +28,7 @@ class replace_settings_view(discord.ui.View):
         with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
             yaml.dump(replace_blacklist, blacklist_file)
         await interaction.response.edit_message(view=self)
-    
+
     @discord.ui.button(label="Reddit", style=discord.ButtonStyle.green)
     async def reddit_button_callback(self, button, interaction):
         if button.style == discord.ButtonStyle.green:
@@ -51,6 +51,20 @@ class replace_settings_view(discord.ui.View):
         else:
             button.style = discord.ButtonStyle.green
             replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://www.youtube.com/shorts/')
+        with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
+            yaml.dump(replace_blacklist, blacklist_file)
+        await interaction.response.edit_message(view=self)
+
+    @discord.ui.button(label="TikTok", style=discord.ButtonStyle.green)
+    async def tiktok_button_callback(self, button, interaction):
+        if button.style == discord.ButtonStyle.green:
+            button.style = discord.ButtonStyle.red
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://www.tiktok.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].append('https://vt.tiktok.com/')
+        else:
+            button.style = discord.ButtonStyle.green
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://www.tiktok.com/')
+            replace_blacklist['user_replace_blacklist'][interaction.user.id].remove('https://vt.tiktok.com/')
         with open('yaml/replaceblacklist.yml', 'w') as blacklist_file:
             yaml.dump(replace_blacklist, blacklist_file)
         await interaction.response.edit_message(view=self)
@@ -109,6 +123,8 @@ async def replace_blacklist_settings(ctx, worker):
             view.children[1].style = discord.ButtonStyle.red
         if "https://www.youtube.com/shorts/" in replace_blacklist['user_replace_blacklist'][user_id]:
             view.children[2].style = discord.ButtonStyle.red
+        if "https://www.tiktok.com/" in replace_blacklist['user_replace_blacklist'][user_id]:
+            view.children[3].style = discord.ButtonStyle.red
 
     message = await ctx.respond(embed=embed, view=view, ephemeral=True)
     # Count down the 60 seconds on the message in 5 second intervals
