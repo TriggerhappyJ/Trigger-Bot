@@ -205,13 +205,11 @@ async def send_announcement(ctx, message_to_send: discord.Option(str, "The messa
 
         with open('yaml/config.yml', 'r') as config_file:
             config = yaml.safe_load(config_file)
-            # Send in the announcement channel for each guild or first channel available to the bot
+            # Send in the announcement channel for each guild that has an announcement channel set
             for guilds in config['guilds']:
-                guild = bot.get_guild(guilds['guild_id'])
                 if guilds['announcement_channel'] != '':
-                    announcement_channel = guild.get_channel(guilds['announcement_channel'])
-                    await announcement_channel.send(message_to_send)
-                    continue
+                    channel = bot.get_channel(guilds['announcement_channel'])
+                    await channel.send(message_to_send)
         await ctx.respond("Sent announcement <a:ralseiBlunt:899401210870763610>")
 
 

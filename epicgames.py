@@ -110,7 +110,7 @@ async def check_epic_free_games(worker, bot):
             print("Checking guilds")
             # for every guild in the config post in the current games channels
             for guild in config['guilds']:
-                for channel in guild['current_games_channels']:
+                for channel in guild['current_games_channel']:
                     current_games_channel = bot.get_channel(channel)
                     for game in epic_config['current_free_games']:
                         await current_games_channel.send(embed=generate_free_game_embed(current_games_list, game, "current", str(datetime.now())[:-7]))
@@ -122,7 +122,7 @@ async def check_epic_free_games(worker, bot):
             epic_config['upcoming_free_games'] = upcoming_games_list
             # for every guild in the config post in the current games channels
             for guild in config['guilds']:
-                for channel in guild['upcoming_games_channels']:
+                for channel in guild['upcoming_games_channel']:
                     upcoming_games_channel = bot.get_channel(channel)
                     for game in epic_config['upcoming_free_games']:
                         await upcoming_games_channel.send(embed=generate_free_game_embed(upcoming_games_list, game, "current", str(datetime.now())[:-7]))

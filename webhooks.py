@@ -82,7 +82,7 @@ async def handle_webhook_startup(bot, config):
         # Find if the guild is in config, if not then add an entry for it
         if next((entry for entry in config['guilds'] if entry['guild_id'] == guild.id), None) is None:
             guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channel': '',
-                      'upcoming_games_channel': '', 'replacement_timeout': 30}
+                      'upcoming_games_channel': '', 'replacement_timeout': 30, 'announcement_channel': ''}
             config['guilds'].append(guilds)
             print("Added guild " + str(guild.id) + " to config file")
             with open('yaml/config.yml', 'w') as edit_config:
