@@ -261,8 +261,8 @@ async def set_status(ctx, status_type: discord.Option(int, "playing: 0, streamin
 @bot.event
 async def on_guild_join(guild):
     print("Joined guild: " + guild.name)
-    guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channels': [],
-              'upcoming_games_channels': [], 'replacement_timeout': 30}
+    guilds = {'guild_id': guild.id, 'guild_name': guild.name, 'webhooks': [], 'current_games_channel': [],
+              'upcoming_games_channel': [], 'replacement_timeout': 30}
     config['guilds'].append(guilds)
     with open('yaml/config.yml', 'w') as edit_config:
         yaml.dump(config, edit_config)
@@ -290,4 +290,4 @@ bot.add_application_command(settings)
 bot.add_application_command(linkReplacements)
 bot.add_application_command(announcements)
 
-bot.run(token)
+bot.run(canary_token)

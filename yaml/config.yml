@@ -1,55 +1,14 @@
 guilds:
 - announcement_channel: 1165434349664084058
-  current_games_channel: null
+  current_games_channel: ''
   guild_id: 741435438807646268
   guild_name: Jacob's Server of Burgers
   replacement_timeout: 30
-  upcoming_games_channel: null
+  upcoming_games_channel: 1165824736987726015
   webhooks:
-  - channel_id: 1165434349664084058
-    webhook_id: 1166304503377702914
-    webhook_url: https://discord.com/api/webhooks/1166304503377702914/0i_TBMPq53usG1Yow-dw3GaZ8BGEouu5ngBBDnGOG6iuVs8rat9LsqN8M4KVldwVL_2F
-- announcement_channel: ''
-  current_games_channel: ''
-  guild_id: 369336391467008002
-  guild_name: The P&C
-  replacement_timeout: 30
-  upcoming_games_channel: ''
-  webhooks:
-  - channel_id: 369336391903084555
-    webhook_id: 1166843098387718271
-    webhook_url: https://discord.com/api/webhooks/1166843098387718271/Fvxs_l_9TW6NA21_R3LOiR1yX_Pys416M-poO29oj0_mlLU9C5hWpq4WViZhCU6kPHXN
-  - channel_id: 699723474427445398
-    webhook_id: 1168722617088360459
-    webhook_url: https://discord.com/api/webhooks/1168722617088360459/fcr8BsrQ0DPEfM7YAG7KCdQuKqL3frHBPVQJkRtzua0yplrrFP8BfGYZul6JmDa7PP7C
-  - channel_id: 462170986293231616
-    webhook_id: 1168001919839645697
-    webhook_url: https://discord.com/api/webhooks/1168001919839645697/QNdkUTaDWTL6VbAtSPfNCJbg-H7g3zh73qfNb_hjSvuboFna9UmK9imBtK47H_253R_G
-  - channel_id: 455628226086043648
-    webhook_id: 1167453393141370881
-    webhook_url: https://discord.com/api/webhooks/1167453393141370881/88pwfxz30MS834oIca0N7xRMn51wJzreQay3nX2TtFBX1-VBN2zidchmdn4UATEBh4Z3
-  - channel_id: 468729631944736778
-    webhook_id: 1168682493881372724
-    webhook_url: https://discord.com/api/webhooks/1168682493881372724/fjsq75LMC4a1F4JOXeTAPTDCHchvmr1GeYZeo4BWLPZc-KxSgCf334ShUiOhpvQJWf5i
-  - channel_id: 474430456578965514
-    webhook_id: 1166153068639965315
-    webhook_url: https://discord.com/api/webhooks/1166153068639965315/OW84kh7KjV02l-_ccBVjzOC37Fr19nu9wqZ72YlMDWPBOZD-fkQ_z_lv6pfeteRkyi22
-  - channel_id: 458133202263867411
-    webhook_id: 1165922434558459926
-    webhook_url: https://discord.com/api/webhooks/1165922434558459926/S3faqe1Kv7SXKDlQkJ354MzJANeeAgQ_bHFPXomft_InctZhBgOafqCzz9ghVh13xxOX
-  - channel_id: 566817699389243395
-    webhook_id: 1177163666366410794
-    webhook_url: https://discord.com/api/webhooks/1177163666366410794/JAm7EzvhshrgFlnK8PJhe3CxauPwWqkVWG4xIl6jN41NyQo-4OR_201phuwRlEk4bLdP
-- announcement_channel: ''
-  current_games_channel: ''
-  guild_id: 1008641329485582347
-  guild_name: "\u2022~losertown~\u2022"
-  replacement_timeout: 30
-  upcoming_games_channel: ''
-  webhooks:
-  - channel_id: 1008642625273872455
-    webhook_id: 1176795308148138026
-    webhook_url: https://discord.com/api/webhooks/1176795308148138026/2umZ-3mBkhqIUvJ5tSnVqNGPz8voKwVBK6UY47vMFY9zeDODM1EnJbxBUTkXG4D6Q7wA
+  - channel_id: 1165824736987726015
+    webhook_id: 1174471725455511575
+    webhook_url: https://discord.com/api/webhooks/1174471725455511575/eIv_8-yLUCyPmcyvi00vRqW2AbbDkTNouozlHu_xNniHC2XNOo_lohWa5IAAT_PBId6d
 max_webhooks: 12
 running_status_message: you
 running_status_type: 3
