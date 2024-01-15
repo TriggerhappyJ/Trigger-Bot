@@ -121,6 +121,7 @@ async def check_epic_free_games(worker, bot):
         #   for guild in config['guilds']:
         #       if guild['upcoming_games_channel'] is not None and str(guild['upcoming_games_channel']) != '':
         #           upcoming_games_channel = bot.get_channel(guild['upcoming_games_channel'])
+        #           for game in epic_config['upcoming_free_games']:
         #               await upcoming_games_channel.send(embed=generate_free_game_embed(upcoming_games_list, game, "upcoming", str(datetime.now())[:-7]))
         #else:
         #   print("Upcoming free games are the same!")
