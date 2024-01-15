@@ -115,16 +115,15 @@ async def check_epic_free_games(worker, bot):
         else:
             print("Current free games are the same!")
 
-        if upcoming_games_list != epic_config['upcoming_free_games']:
-            print("Upcoming free game is different! Updating...")
-            epic_config['upcoming_free_games'] = upcoming_games_list
-            for guild in config['guilds']:
-                if guild['upcoming_games_channel'] is not None and str(guild['upcoming_games_channel']) != '':
-                    upcoming_games_channel = bot.get_channel(guild['upcoming_games_channel'])
-                    for game in epic_config['upcoming_free_games']:
-                        await upcoming_games_channel.send(embed=generate_free_game_embed(upcoming_games_list, game, "upcoming", str(datetime.now())[:-7]))
-        else:
-            print("Upcoming free games are the same!")
+        #if upcoming_games_list != epic_config['upcoming_free_games']:
+        #   print("Upcoming free game is different! Updating...")
+        #   epic_config['upcoming_free_games'] = upcoming_games_list
+        #   for guild in config['guilds']:
+        #       if guild['upcoming_games_channel'] is not None and str(guild['upcoming_games_channel']) != '':
+        #           upcoming_games_channel = bot.get_channel(guild['upcoming_games_channel'])
+        #               await upcoming_games_channel.send(embed=generate_free_game_embed(upcoming_games_list, game, "upcoming", str(datetime.now())[:-7]))
+        #else:
+        #   print("Upcoming free games are the same!")
 
         with open('yaml/epicgames.yml', 'w') as edit_epicgames:
             yaml.dump(epic_config, edit_epicgames)

@@ -142,6 +142,7 @@ async def current_games(ctx):
         "There are a total of " + str(len(free_games_list)) + " free games right now <a:duckSpin:892990312732053544>")
 
 
+"""
 @freeGames.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="upcoming",
                    description="Shows the upcoming free games on the Epic Games Store")
 async def upcoming_games(ctx):
@@ -153,6 +154,7 @@ async def upcoming_games(ctx):
             embed=generate_free_game_embed(free_games_list, game, "upcoming", epic_free_games['update_time']))
     await ctx.respond(
         "There are a total of " + str(len(free_games_list)) + " upcoming free games <a:duckSpin:892990312732053544>")
+"""
 
 
 @freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="setcurrentchannel",
@@ -175,10 +177,11 @@ async def toggle_current_games_channel(ctx, channel: discord.Option(discord.Text
             await ctx.respond("I'll stop sending current free games in " + channel.name + " now <a:ralseiBoom:899406996007190549>")
 
 
+"""
 @freeGamesSettings.command(guild_ids=[741435438807646268, 369336391467008002, 1008641329485582347], name="setupcomingchannel",
                            description="Use to set the channel upcoming free games are posted in")
 @discord.default_permissions(manage_messages=True)
-async def toggle_current_games_channel(ctx, channel: discord.Option(discord.TextChannel, "The channel to send upcoming free games in")):
+async def toggle_upcoming_games_channel(ctx, channel: discord.Option(discord.TextChannel, "The channel to send upcoming free games in")):
     with open('yaml/config.yml', 'w') as edit_config:
         # Finds the guild in the config file
         guilds = next((entry for entry in config['guilds'] if entry['guild_id'] == ctx.guild.id), None)
@@ -193,7 +196,7 @@ async def toggle_current_games_channel(ctx, channel: discord.Option(discord.Text
             guilds['upcoming_games_channel'] = ''
             yaml.dump(config, edit_config)
             await ctx.respond("I'll stop sending upcoming free games in " + channel.name + " now <a:ralseiBoom:899406996007190549>")
-
+"""
 
 @announcements.command(guild_ids=[741435438807646268], name="send", description="Send an announcement")
 async def send_announcement(ctx, message_to_send: discord.Option(str, "The message to send")):
