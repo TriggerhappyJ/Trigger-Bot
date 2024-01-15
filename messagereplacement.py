@@ -10,7 +10,7 @@ class message_delete_view(discord.ui.View):
     @discord.ui.button(label="", style=discord.ButtonStyle.red, emoji="🗑")
     async def button_callback(self, button, interaction):
         # Only deletes the message if the user who clicked the button is the message author
-        if interaction.user.name == interaction.message.author.name:
+        if interaction.user.display_name == interaction.message.author.name:
             await interaction.response.send_message("Got it, Message has been deleted! <a:ralseiBlunt:899401210870763610>", ephemeral=True)
             if interaction.message:
                 await interaction.message.delete()

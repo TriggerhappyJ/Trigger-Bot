@@ -290,4 +290,4 @@ bot.add_application_command(settings)
 bot.add_application_command(linkReplacements)
 bot.add_application_command(announcements)
 
-bot.run(token)
+bot.run(canary_token)
