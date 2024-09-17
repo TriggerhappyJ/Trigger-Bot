@@ -93,5 +93,5 @@ async def handle_webhook_startup(bot, config):
             for webhook in webhooks:
                 # If the bot has created the webhook, save it in the config file
                 if webhook.user == bot.user:
-                    print("Saving webhook " + webhook.name + " in guild " + webhook.guild.name)
+                    print("Saving webhook " + str(webhook.id) + " in guild " + str(webhook.guild.id))
                     await manage_webhooks(channel, webhook, guild.id, config, webhook.guild.name)
