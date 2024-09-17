@@ -285,8 +285,13 @@ async def on_guild_remove(guild):
 async def task_consumer():
     while True:
         task = await job_queue.get()
-        await task()
-        job_queue.task_done()
+
+        try:
+            await task()  # Execute the task
+        except Exception as e:
+            logging.error(f"Error while executing task: {e}")
+        finally:
+            job_queue.task_done()
 
 bot.add_application_command(freeGames)
 bot.add_application_command(settings)

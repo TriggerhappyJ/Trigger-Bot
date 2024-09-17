@@ -1,22 +1,17 @@
 current_free_games:
-  Sail Forth:
-  - Sail Forth
-  - https://store.epicgames.com/en-US/p/sail-forth-51847e
-  - https://cdn1.epicgames.com/spt-assets/bf6f7c896b214dd891aa10debb6fbf50/sail-forth-1h4ru.jpg
-  - Sail a fleet of customizable ships across an ocean whose ancient depths have swallowed
-    the key to the mysterious past. Befriend fishfolk to expand your boat crews, take
-    up arms against petulant pirates, and chart a course across an expansive watery
-    world.
-  - 2024-01-12 05:00:00+13:00
-  - 2024-01-19 05:00:00+13:00
-upcoming_free_games:
-  LOVE:
-  - LOVE
-  - https://store.epicgames.com/en-US/p/love-65c4d0
-  - https://cdn1.epicgames.com/spt-assets/d4c3a9a3058c471fb5e18af6908f28f0/love-12c4i.png
-  - LOVE is a reductive platforming game with a minimalist and a focus on a challenging
-    difficulty. It has an custom respawn system, 16 levels, a 12 track original soundtrack,
-    competitive scoring and time attack modes, and custom level support.
-  - 2024-01-19 05:00:00+13:00
-  - 2024-01-26 05:00:00+13:00
-update_time: '2024-01-16 11:46:03'
+- description: "It\u2019s Super Crazy Rhythm Castle, the chaotic rhythm adventure!\
+    \ A puzzling co-op mashup unlike anything you've ever heard. Solo, or with a band\
+    \ of up to three friends \u2026 \u2026 Can you conquer the castle?"
+  expiry: '2024-09-19T15:00:00.000Z'
+  image: https://cdn1.epicgames.com/spt-assets/3e4cea34f89d440d97cf22ddf6c122f2/super-crazy-rhythm-castle-166b4.jpg
+  pageSlug: super-crazy-rhythm-castle-e3b464
+  title: SUPER CRAZY RHYTHM CASTLE
+- description: "When Tommy,  game commercial,\
+    \ they imagine their own game! Switch between 8-bit and HD art, pick your favorite\
+    \ baby, and play solo or co-op in Rugrats: Adventures in Gameland\u2014a neo-retro\
+    \ platformer bursting with nostalgia"
+  expiry: '2024-09-19T15:00:00.000Z'
+  image: https://cdn1.epicgames.com/spt-assets/1251ee32f3b6496e99e170d4dc890d9e/rugrats-adventures-in-gameland-53l09.png
+  pageSlug: rugrats-adventures-in-gameland-737402
+  title: 'Rugrats: Adventures in Gameland'
+update_time: '2024-09-17 18:27:37'
